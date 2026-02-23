@@ -9,7 +9,7 @@ public class User : IdentityUser
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<Inventory> Inventories { get; set; } = [];
+    public ICollection<Inventory> OwnedInventories { get; set; } = [];
     public ICollection<InventoryAccess> AccessList { get; set; } = [];
     public ICollection<Item> Items { get; set; } = [];
     public ICollection<Post> Posts { get; set; } = [];

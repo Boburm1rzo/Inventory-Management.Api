@@ -10,5 +10,5 @@ public class ItemFieldValue
     public int ItemId { get; set; }
     public virtual Item Item { get; set; } = null!;
     public int FieldId { get; set; }
-    public virtual InventoryField InventoryField { get; set; } = null!;
+    public virtual InventoryField Field { get; set; } = null!;
 }

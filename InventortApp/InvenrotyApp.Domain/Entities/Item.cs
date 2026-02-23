@@ -15,8 +15,8 @@ public class Item
 
     public int InventoryId { get; set; }
     public virtual Inventory Inventory { get; set; } = null!;
-    public string? UserId { get; set; }
-    public virtual User User { get; set; } = null!;
+    public string? CreatedById { get; set; }
+    public virtual User CreatedBy { get; set; } = null!;
     public ICollection<ItemFieldValue> FieldValues { get; set; } = [];
     public ICollection<Like> Likes { get; set; } = [];
 }

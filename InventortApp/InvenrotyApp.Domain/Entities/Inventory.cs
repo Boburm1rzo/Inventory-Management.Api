@@ -14,11 +14,12 @@ public class Inventory
 
     [Timestamp]
     public byte[] RowVersion { get; set; } = null!;
-    public string OwnerId { get; set; } = string.Empty;
-    public int? CategoryId { get; set; }
 
+    public string OwnerId { get; set; } = string.Empty;
     public virtual User Owner { get; set; } = null!;
+    public int? CategoryId { get; set; }
     public virtual Category? Category { get; set; }
+
     public ICollection<InventoryField> Fields { get; set; } = [];
     public ICollection<InventoryIdFormatPart> IdFormatParts { get; set; } = [];
     public ICollection<InventoryAccess> AccessList { get; set; } = [];

@@ -9,6 +9,6 @@ public class InventoryIdFormatPart
     public int Order { get; set; }
     public string? Config { get; set; }
 
-    public int IventoryId { get; set; }
+    public int InventoryId { get; set; }
     public virtual Inventory Inventory { get; set; } = null!;
 }

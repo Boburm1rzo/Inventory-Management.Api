@@ -8,6 +8,6 @@ public class Post
 
     public int InventoryId { get; set; }
     public virtual Inventory Inventory { get; set; } = null!;
-    public string? UserId { get; set; }
-    public virtual User User { get; set; } = null!;
+    public string? AuthorId { get; set; }
+    public virtual User Author { get; set; } = null!;
 }
