@@ -1,5 +1,9 @@
-﻿namespace InventoryApp.Domain.Interfaces;
+﻿using InventoryApp.Domain.Entities;
 
-internal interface IPostRepository
+namespace InventoryApp.Domain.Interfaces;
+
+public interface IPostRepository
 {
+    Task<List<Post>> GetByInventoryAsync(int inventoryId);
+    Task AddAsync(Post post);
 }

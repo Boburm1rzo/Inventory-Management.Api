@@ -1,5 +1,9 @@
-﻿namespace InventoryApp.Domain.Interfaces;
+﻿using InventoryApp.Domain.Entities;
 
-internal interface ITagRepository
+namespace InventoryApp.Domain.Interfaces;
+
+public interface ITagRepository
 {
+    Task<List<Tag>> GetByPrefixAsync(string prefix, int limit = 10);
+    Task<Tag> GetOrCreateAsync(string name);
 }
