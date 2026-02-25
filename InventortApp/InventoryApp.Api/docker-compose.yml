@@ -1,0 +1,54 @@
+services:
+
+  api:
+    image: ${DOCKER_IMAGE}          
+    container_name: inventoryapp_api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=InventoryApp;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+      - Authentication__Google__ClientId=${GOOGLE_CLIENT_ID}
+      - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - Authentication__Facebook__AppId=${FACEBOOK_APP_ID}
+      - Authentication__Facebook__AppSecret=${FACEBOOK_APP_SECRET}
+      - Jwt__Secret=${JWT_SECRET}
+    depends_on:
+      sqlserver:
+        condition: service_healthy   
+    networks:
+      - inventoryapp_net
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: inventoryapp_sqlserver
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Express             
+    ports:
+      - "1433:1433"                   
+    volumes:
+      - sqlserver_data:/var/opt/mssql 
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${SA_PASSWORD}' -Q 'SELECT 1' -C -b"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s              
+    networks:
+      - inventoryapp_net
+
+volumes:
+  sqlserver_data:
+    driver: local
+
+networks:
+  inventoryapp_net:
+    driver: bridge
