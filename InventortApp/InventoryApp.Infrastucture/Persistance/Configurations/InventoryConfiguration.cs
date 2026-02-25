@@ -12,15 +12,13 @@ internal sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventor
 
         builder.HasKey(i => i.Id);
 
-        builder
-            .HasOne(i => i.Owner)
+        builder.HasOne(i => i.Owner)
             .WithMany(u => u.OwnedInventories)
             .HasForeignKey(i => i.OwnerId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
-        builder
-            .HasOne(i => i.Category)
+        builder.HasOne(i => i.Category)
             .WithMany(c => c.Inventories)
             .HasForeignKey(i => i.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);

@@ -21,7 +21,7 @@ internal sealed class LikeConfiguration : IEntityTypeConfiguration<Like>
         builder.HasOne(x => x.Item)
             .WithMany(i => i.Likes)
             .HasForeignKey(i => i.ItemId)
-            .OnDelete(DeleteBehavior.Restrict)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         builder.Property(x => x.CreatedAt)

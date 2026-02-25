@@ -15,12 +15,12 @@ internal sealed class InventoryAccessConfiguration : IEntityTypeConfiguration<In
         builder.HasOne(ia => ia.Inventory)
             .WithMany(i => i.AccessList)
             .HasForeignKey(ia => ia.InventoryId)
-            .OnDelete(DeleteBehavior.Restrict)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         builder.HasOne(ia => ia.User)
             .WithMany(u => u.AccessList)
             .HasForeignKey(ia => ia.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

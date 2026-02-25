@@ -15,7 +15,7 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.HasOne(p => p.Inventory)
             .WithMany(i => i.Posts)
             .HasForeignKey(p => p.InventoryId)
-            .OnDelete(DeleteBehavior.Restrict)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         builder.HasOne(p => p.Author)

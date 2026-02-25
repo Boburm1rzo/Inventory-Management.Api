@@ -12,8 +12,7 @@ internal sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasKey(c => c.Id);
 
-        builder
-            .Property(c => c.Name)
+        builder.Property(c => c.Name)
             .HasMaxLength(ConfigurationConstants.DefaultStringLength)
             .IsRequired();
     }
