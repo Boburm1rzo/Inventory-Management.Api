@@ -1,9 +1,9 @@
-﻿using InventoryApp.Infrastucture.Persistance;
+﻿using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace InventoryApp.Infrastucture.Extentions;
+namespace InventoryApp.Infrastructure.Extentions;
 
 public static class DependencyInjection
 {

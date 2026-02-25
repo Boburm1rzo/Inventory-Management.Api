@@ -1,4 +1,4 @@
-﻿namespace InventoryApp.Infrastucture.Persistance.Configurations;
+﻿namespace InventoryApp.Infrastructure.Persistance.Configurations;
 
 internal static class ConfigurationConstants
 {

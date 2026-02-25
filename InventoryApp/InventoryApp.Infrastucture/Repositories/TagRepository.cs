@@ -1,4 +1,4 @@
-﻿namespace InventoryApp.Infrastucture.Repositories;
+﻿namespace InventoryApp.Infrastructure.Repositories;
 
 internal class TagRepository
 {

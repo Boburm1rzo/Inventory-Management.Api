@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace InventoryApp.Infrastucture.Persistance.Configurations;
+namespace InventoryApp.Infrastructure.Persistance.Configurations;
 
 internal sealed class InventoryIdFormatPartConfiguration : IEntityTypeConfiguration<InventoryIdFormatPart>
 {

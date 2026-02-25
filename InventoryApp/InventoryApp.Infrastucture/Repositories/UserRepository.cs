@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace InventoryApp.Infrastucture.Repositories;
+namespace InventoryApp.Infrastructure.Repositories;
 
 internal class UserRepository
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace InventoryApp.Infrastucture.Services;
+namespace InventoryApp.Infrastructure.Services;
 
 internal class CloudinaryService
 {
