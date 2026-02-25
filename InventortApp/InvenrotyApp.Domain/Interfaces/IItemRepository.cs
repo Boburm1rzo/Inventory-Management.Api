@@ -1,4 +1,5 @@
-﻿using InventoryApp.Domain.Entities;
+﻿using InventoryApp.Application.Common;
+using InventoryApp.Domain.Entities;
 
 namespace InventoryApp.Domain.Interfaces;
 
