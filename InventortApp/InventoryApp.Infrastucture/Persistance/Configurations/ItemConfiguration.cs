@@ -12,31 +12,32 @@ internal sealed class ItemConfiguration : IEntityTypeConfiguration<Item>
 
         builder.HasKey(i => i.Id);
 
-        builder
-            .HasMany(i => i.FieldValues)
-            .WithOne(fv => fv.Item)
-            .HasForeignKey(i => i.ItemId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder
-            .HasMany(i => i.Likes)
-            .WithOne(fv => fv.Item)
-            .HasForeignKey(i => i.ItemId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder
-            .HasOne(i => i.CreatedBy)
-            .WithMany(u => u.Items)
+        builder.HasOne(i => i.CreatedBy)
+            .WithMany(i => i.Items)
             .HasForeignKey(i => i.CreatedById)
-            .OnDelete(DeleteBehavior.Cascade)
+            .OnDelete(DeleteBehavior.Restrict)
             .IsRequired();
+
+        builder
+            .HasOne(i => i.Inventory)
+            .WithMany(u => u.Items)
+            .HasForeignKey(i => i.InventoryId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
+
+        builder.HasIndex(i => new { i.InventoryId, i.CustomId })
+            .IsUnique();
 
         builder.Property(i => i.RowVersion)
             .IsRowVersion()
             .IsConcurrencyToken();
 
-        builder
-            .HasIndex(i => new { i.InventoryId, i.CustomId })
-            .IsUnique();
+        builder.Property(i => i.CreatedAt)
+            .HasDefaultValueSql(ConfigurationConstants.GetUtcDateSql)
+            .IsRequired();
+
+        builder.Property(i => i.UpdatedAt)
+            .HasDefaultValueSql(ConfigurationConstants.GetUtcDateSql)
+            .IsRequired();
     }
 }

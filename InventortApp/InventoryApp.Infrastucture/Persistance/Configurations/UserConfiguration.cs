@@ -12,34 +12,19 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(u => u.Id);
 
-        builder
-            .HasMany(u => u.OwnedInventories)
-            .WithOne(i => i.Owner)
-            .HasForeignKey(i => i.OwnerId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(u => u.IsBlocked)
+            .IsRequired();
 
-        builder
-            .HasMany(u => u.AccessList)
-            .WithOne(a => a.User)
-            .HasForeignKey(a => a.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(u => u.DisplayName)
+            .HasMaxLength(ConfigurationConstants.DefaultStringLength)
+            .IsRequired();
 
-        builder
-            .HasMany(u => u.Likes)
-            .WithOne(l => l.User)
-            .HasForeignKey(l => l.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(u => u.AvatarUrl)
+            .HasMaxLength(ConfigurationConstants.MaxStringLength)
+            .IsRequired(false);
 
-        builder
-            .HasMany(u => u.Posts)
-            .WithOne(p => p.Author)
-            .HasForeignKey(p => p.AuthorId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder
-            .HasMany(u => u.Items)
-            .WithOne(i => i.CreatedBy)
-            .HasForeignKey(i => i.CreatedById)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(u => u.CreatedAt)
+            .HasDefaultValueSql(ConfigurationConstants.GetUtcDateSql)
+            .IsRequired();
     }
 }
