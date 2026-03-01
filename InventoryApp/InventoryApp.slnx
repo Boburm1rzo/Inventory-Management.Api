@@ -1,8 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="InvenrotyApp.Domain/InventoryApp.Domain.csproj" Id="45262d61-58fb-4e16-b07b-0e64fdca183c" />
+    <Project Path="InventoryApp.Domain/InventoryApp.Domain.csproj" Id="14fcfc2b-e0f3-4c56-b04d-a477f7d2bd0c" />
     <Project Path="InventoryApp.Api/InventoryApp.Api.csproj" />
     <Project Path="InventoryApp.Application/InventoryApp.Application.csproj" Id="0ea127dc-dba2-4e0b-8233-74b4068bac39" />
-    <Project Path="InventoryApp.Infrastucture/InventoryApp.Infrastructure.csproj" Id="a215912f-6f6e-4e35-b11c-2ddda6471db0" />
+    <Project Path="InventoryApp.Infrastructure/InventoryApp.Infrastructure.csproj" Id="7d75b869-d5c2-42e7-929b-59568a530d3e" />
   </Folder>
 </Solution>
