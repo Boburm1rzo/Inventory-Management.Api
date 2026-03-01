@@ -13,9 +13,6 @@ env:
   APP_DIR: /opt/inventoryapp
 
 jobs:
-# =======================
-# 1️⃣ BUILD & PUSH IMAGE
-# =======================
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -29,7 +26,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔹 Image nomini lowercase qilamiz (Docker talab qiladi)
       - name: Compute image name (lowercase)
         id: image
         shell: bash
@@ -64,9 +60,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-# =======================
-# 2️⃣ DEPLOY TO SERVER
-# =======================
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -75,7 +68,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔹 docker-compose.yml ni serverga to‘g‘ri joyga tushiramiz
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -112,12 +104,10 @@ jobs:
               exit 1
             fi
 
-            # 🔹 .env bo‘lmasa yaratamiz
             if [ ! -f ".env" ]; then
               echo "DOCKER_IMAGE=$IMAGE" > .env
             fi
 
-            # 🔹 DOCKER_IMAGE ni yangilaymiz
             if grep -q '^DOCKER_IMAGE=' .env; then
               sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=$IMAGE|" .env
             else
