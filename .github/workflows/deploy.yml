@@ -2,24 +2,20 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [main] # faqat main branchga push bo'lganda ishlaydi
-  workflow_dispatch: # qo'lda ham ishga tushirish mumkin
+    branches: [main]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }} # ghcr.io/username/inventoryapp
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ─── 1. Build & Push Docker image ──────────────────────────────────────
   build:
     name: Build & Push Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # GitHub Container Registry'ga push uchun
-
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
+      packages: write
 
     steps:
       - name: Checkout code
@@ -30,9 +26,8 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # avtomatik token, qo'shish shart emas
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Image tag'larini tayyorlash: latest + commit SHA
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -42,7 +37,6 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-
 
-      # Docker Buildx — tezroq build uchun (cache qo'llab-quvvatlaydi)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -54,21 +48,20 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha # GitHub Actions cache — build tezlashadi
+          cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ─── 2. Deploy to VPS ──────────────────────────────────────────────────
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: build # build muvaffaqiyatli bo'lsagina ishlaydi
-    environment: production # GitHub'da "production" environment yaratish kerak
+    needs: build
+    environment: production
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # docker-compose.yml faylini serverga ko'chirish
+      # 1) docker-compose.yml ni serverga /opt/inventoryapp/docker-compose.yml qilib tushiramiz
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -77,44 +70,62 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "InventoryApp/InventoryApp.Api/docker-compose.yml"
           target: "/opt/inventoryapp"
+          strip_components: 2
           overwrite: true
 
-      # SSH orqali serverga kirib, yangi imageni pull qilib, restart qilish
+      # 2) Serverda pull + restart
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
           script: |
-            set -e   # biror komanda xato bo'lsa to'xtaydi
+            set -e
 
-            cd /opt/inventoryapp
+            APP_DIR="/opt/inventoryapp"
+            COMPOSE_FILE="$APP_DIR/docker-compose.yml"
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
 
-            # GitHub Container Registry'ga login
-            echo "${{ secrets.GITHUB_TOKEN }}" | \
-              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
 
-            # Yangi image tag'ini .env ga yozish
-            sed -i "s|DOCKER_IMAGE=.*|DOCKER_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest|" .env
+            echo "== Files in $APP_DIR =="
+            ls -la
 
-            # Yangi imageni pull qilish
-            docker compose pull api
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "ERROR: $COMPOSE_FILE not found"
+              exit 1
+            fi
 
-            # Zero-downtime restart: avval yangi container, keyin eski o'chadi
-            docker compose up -d --no-build api
+            # .env bo‘lmasa yaratamiz (kamida DOCKER_IMAGE bo‘lsin)
+            if [ ! -f ".env" ]; then
+              echo "DOCKER_IMAGE=$IMAGE" > .env
+            fi
 
-            # Ishga tushmagan containerlarni tozalash
+            # DOCKER_IMAGE ni yangilash (bor bo‘lsa almashtiradi, bo‘lmasa qo‘shadi)
+            if grep -q '^DOCKER_IMAGE=' .env; then
+              sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=$IMAGE|" .env
+            else
+              echo "DOCKER_IMAGE=$IMAGE" >> .env
+            fi
+
+            # GHCR login (token runner’dan keladi)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull + restart
+            docker compose -f "$COMPOSE_FILE" pull api
+            docker compose -f "$COMPOSE_FILE" up -d --no-build api
+
+            # keraksiz imagelarni tozalash
             docker image prune -f
 
-            # Migration ishlatish — yangi schema o'zgarishlari bo'lsa qo'llaydi
-            docker compose exec -T api \
-              dotnet InventoryApp.Api.dll --migrate || true
+            # ixtiyoriy migrate (sendagi app qo‘llasa)
+            docker compose -f "$COMPOSE_FILE" exec -T api dotnet InventoryApp.Api.dll --migrate || true
 
             echo "✅ Deploy muvaffaqiyatli yakunlandi"
 
-      # Deploy muvaffaqiyatsiz bo'lsa xabar berish (ixtiyoriy)
       - name: Notify on failure
         if: failure()
-        run: |
-          echo "❌ Deploy muvaffaqiyatsiz! Loglarni tekshiring."
+        run: echo "❌ Deploy muvaffaqiyatsiz! Loglarni tekshiring."
