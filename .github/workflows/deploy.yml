@@ -7,62 +7,67 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # InventoryApp ichida build qilamiz
-  DOCKER_CONTEXT: ./InventoryApp
+  BUILD_CONTEXT: ./InventoryApp
   DOCKERFILE_PATH: ./InventoryApp/InventoryApp.Api/Dockerfile
   COMPOSE_SOURCE: InventoryApp/InventoryApp.Api/docker-compose.yml
   APP_DIR: /opt/inventoryapp
 
 jobs:
+# =======================
+# 1️⃣ BUILD & PUSH IMAGE
+# =======================
   build:
-    name: Build & Push Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     outputs:
-      image: ${{ steps.vars.outputs.image }}
+      image: ${{ steps.image.outputs.full }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # repo nomini lowercase qilamiz: Owner/Repo -> owner/repo
+      # 🔹 Image nomini lowercase qilamiz (Docker talab qiladi)
       - name: Compute image name (lowercase)
-        id: vars
+        id: image
         shell: bash
         run: |
-          IMAGE_NAME="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
-          echo "image=${{ env.REGISTRY }}/${IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
+          NAME=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          FULL="${{ env.REGISTRY }}/${NAME}:latest"
+          echo "full=$FULL" >> $GITHUB_OUTPUT
+          echo "Using image: $FULL"
 
-          - name: Reset docker context
-          run: |
+      - name: Reset Docker context
+        run: |
           docker context use default || true
           docker context ls || true
 
-      - name: Log in to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image (latest)
+      - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ env.DOCKER_CONTEXT }}
+          context: ${{ env.BUILD_CONTEXT }}
           file: ${{ env.DOCKERFILE_PATH }}
           push: true
-          tags: ${{ steps.vars.outputs.image }}
+          tags: ${{ steps.image.outputs.full }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+# =======================
+# 2️⃣ DEPLOY TO SERVER
+# =======================
   deploy:
-    name: Deploy to VPS
     runs-on: ubuntu-latest
     needs: build
 
@@ -70,7 +75,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # docker-compose.yml ni /opt/inventoryapp/docker-compose.yml qilib tushiramiz
+      # 🔹 docker-compose.yml ni serverga to‘g‘ri joyga tushiramiz
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -93,41 +98,45 @@ jobs:
             set -e
 
             APP_DIR="${{ env.APP_DIR }}"
-            COMPOSE_FILE="$APP_DIR/docker-compose.yml"
             IMAGE="${{ needs.build.outputs.image }}"
+            COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 
             mkdir -p "$APP_DIR"
             cd "$APP_DIR"
 
-            echo "== Files in $APP_DIR =="
+            echo "📁 Files in $APP_DIR:"
             ls -la
 
             if [ ! -f "$COMPOSE_FILE" ]; then
-              echo "ERROR: $COMPOSE_FILE not found"
+              echo "❌ docker-compose.yml not found!"
               exit 1
             fi
 
-            # .env bo'lmasa yaratib qo'yamiz
+            # 🔹 .env bo‘lmasa yaratamiz
             if [ ! -f ".env" ]; then
               echo "DOCKER_IMAGE=$IMAGE" > .env
             fi
 
-            # DOCKER_IMAGE ni yangilash (bor bo'lsa almashtiradi, bo'lmasa qo'shadi)
+            # 🔹 DOCKER_IMAGE ni yangilaymiz
             if grep -q '^DOCKER_IMAGE=' .env; then
               sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=$IMAGE|" .env
             else
               echo "DOCKER_IMAGE=$IMAGE" >> .env
             fi
 
-            # GHCR login (repo private bo'lsa kerak bo'ladi)
+            echo "🔐 Login to GHCR..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+            echo "⬇ Pull latest image..."
             docker compose -f "$COMPOSE_FILE" pull api
+
+            echo "🚀 Restart container..."
             docker compose -f "$COMPOSE_FILE" up -d --no-build api
 
+            echo "🧹 Cleanup old images..."
             docker image prune -f
 
-            # migrate (agar app qo'llasa)
+            echo "🛠 Run migrations (if exists)..."
             docker compose -f "$COMPOSE_FILE" exec -T api dotnet InventoryApp.Api.dll --migrate || true
 
-            echo "✅ Deploy done"
+            echo "✅ DEPLOY SUCCESS"
