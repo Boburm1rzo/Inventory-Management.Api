@@ -25,7 +25,7 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
             .IsRequired();
 
         builder.Property(p => p.Content)
-            .HasMaxLength(ConfigurationConstants.MaxStringLength)
+            .HasMaxLength(ConfigurationConstants.PostContnentMaxLength)
             .IsRequired();
 
         builder.Property(p => p.CreatedAt)

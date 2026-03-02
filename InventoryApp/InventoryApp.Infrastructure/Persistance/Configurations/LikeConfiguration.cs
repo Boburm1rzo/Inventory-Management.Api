@@ -27,5 +27,8 @@ internal sealed class LikeConfiguration : IEntityTypeConfiguration<Like>
         builder.Property(x => x.CreatedAt)
             .HasDefaultValueSql(ConfigurationConstants.GetUtcDateSql)
             .IsRequired();
+
+        builder.HasIndex(x => new { x.ItemId, x.UserId })
+            .IsUnique();
     }
 }

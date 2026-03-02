@@ -22,5 +22,8 @@ internal sealed class InventoryAccessConfiguration : IEntityTypeConfiguration<In
             .WithMany(u => u.AccessList)
             .HasForeignKey(ia => ia.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => new { x.InventoryId, x.UserId })
+            .IsUnique();
     }
 }

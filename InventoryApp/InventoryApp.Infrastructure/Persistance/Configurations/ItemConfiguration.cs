@@ -22,7 +22,7 @@ internal sealed class ItemConfiguration : IEntityTypeConfiguration<Item>
             .HasOne(i => i.Inventory)
             .WithMany(u => u.Items)
             .HasForeignKey(i => i.InventoryId)
-            .OnDelete(DeleteBehavior.Restrict)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         builder.HasIndex(i => new { i.InventoryId, i.CustomId })
