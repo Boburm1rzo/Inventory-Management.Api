@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventoryApp.Infrastructure.Persistance;
 
-public class AppDbContext : IdentityDbContext<User>
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Inventory> Inventories { get; set; }
@@ -17,8 +17,6 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Category> Categories { get; set; }
     public DbSet<InventoryIdFormatPart> InventoryIdFormatParts { get; set; }
     public DbSet<Tag> Tags { get; set; }
-
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
