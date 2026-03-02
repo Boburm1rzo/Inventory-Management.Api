@@ -15,7 +15,7 @@ internal sealed class InventoryFieldConfiguration : IEntityTypeConfiguration<Inv
         builder.HasOne(f => f.Inventory)
             .WithMany(i => i.Fields)
             .HasForeignKey(f => f.InventoryId)
-            .OnDelete(DeleteBehavior.Cascade)
+            .OnDelete(DeleteBehavior.NoAction)
             .IsRequired();
 
         builder.HasIndex(f => new { f.InventoryId, f.Order });
