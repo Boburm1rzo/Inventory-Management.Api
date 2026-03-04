@@ -22,12 +22,17 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Something went wrong: {ex}");
-            await HandleExceptionAsync(context, ex);
+            var traceId = context.TraceIdentifier;
+
+            _logger.LogError(ex,
+                 "Unhandled exception. TraceId={TraceId} Method={Method} Path={Path}",
+                 traceId, context.Request.Method, context.Request.Path);
+
+            await HandleExceptionAsync(context, ex, traceId);
         }
     }
 
-    private Task HandleExceptionAsync(HttpContext context, Exception ex)
+    private Task HandleExceptionAsync(HttpContext context, Exception ex, string traceId)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = ex switch
@@ -41,6 +46,7 @@ public class ExceptionHandlingMiddleware
         {
             StatusCode = context.Response.StatusCode,
             Message = ex.Message,
+            traceId
         };
 
         return context.Response.WriteAsync(JsonConvert.SerializeObject(response));
