@@ -1,71 +1,87 @@
 ﻿using InventoryApp.Application.DTOs;
+using InventoryApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace InventoryApp.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    ICurrentUserService currentUserService,
+    IConfiguration configuration,
+    ILogger<AuthController> logger) : ControllerBase
 {
     [HttpPost("register")]
-    public IActionResult Register(RegisterDto request)
+    public async Task<IActionResult> Register(RegisterDto request)
     {
-        return Ok();
+        logger.LogInformation("HTTP Register request. Email={Email}", request.Email);
+        var result = await authService.RegisterAsync(request);
+        return Ok(result);
     }
 
     [HttpPost("login")]
-    public IActionResult Login(LoginDto request)
+    public async Task<IActionResult> Login(LoginDto request)
     {
-        return Ok();
+        logger.LogInformation("HTTP Login request. Email={Email}", request.Email);
+        var result = await authService.LoginAsync(request);
+        return Ok(result);
     }
 
     [HttpGet("me")]
+    [Authorize]
     public async Task<ActionResult<UserResponseDto>> Me()
     {
-        var res = new UserResponseDto(1, "", "", "");
-        return res;
+        var userId = currentUserService.UserId;
+        logger.LogInformation("HTTP Me request. UserId={UserId}", userId);
+
+        var result = await authService.GetCurrentUserAsync(userId);
+        return Ok(result);
     }
 
-    [HttpGet("external-callback")]
-    public async Task<IActionResult> ExternalCallback(string provider)
+    [HttpGet("login-google")]
+    public IActionResult LoginGoogle()
     {
-        var ext = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
+        var redirectUri = $"{Request.Scheme}://{Request.Host}/api/auth/google-callback";
+        logger.LogInformation("Start Google login. RedirectUri={RedirectUri}", redirectUri);
 
-        if (!ext.Succeeded || ext.Principal is null)
-            return BadRequest($"{provider} auth failed.");
-
-        var email = ext.Principal.FindFirstValue(ClaimTypes.Email);
-        var name = ext.Principal.FindFirstValue(ClaimTypes.Name) ?? email ?? "User";
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            var pid = ext.Principal.FindFirstValue(ClaimTypes.Name) ?? Guid.NewGuid().ToString("N");
-            email = $"{provider.ToLower()}_{pid}@no-email.local";
-        }
-
-        return Ok();
+        var props = new AuthenticationProperties { RedirectUri = redirectUri };
+        return Challenge(props, "Google");
     }
 
     [HttpGet("login-facebook")]
     public IActionResult LoginFacebook()
-        => Challenge(BuildProps("/api/auth/facebook-callback"), "Facebook");
+    {
+        var redirectUri = $"{Request.Scheme}://{Request.Host}/api/auth/facebook-callback";
+        logger.LogInformation("Start Facebook login. RedirectUri={RedirectUri}", redirectUri);
 
-    [HttpGet("login-google")]
-    public IActionResult LoginGoogle()
-       => Challenge(BuildProps("/api/auth/google-callback"), "Google");
+        var props = new AuthenticationProperties { RedirectUri = redirectUri };
+        return Challenge(props, "Facebook");
+    }
 
     [HttpGet("google-callback")]
-    public Task<IActionResult> GoogleCallback() => ExternalCallback("Google");
+    public async Task<IActionResult> GoogleCallback()
+    {
+        logger.LogInformation("Google callback hit.");
+
+        var result = await authService.ExternalLoginAsync();
+        var frontendUrl = configuration["Frontend:Url"];
+
+        logger.LogInformation("Google callback success. Redirecting to frontend.");
+        return Redirect($"{frontendUrl}/auth/callback?token={result.Token}");
+    }
 
     [HttpGet("facebook-callback")]
-    public Task<IActionResult> FacebookCallback() => ExternalCallback("Facebook");
+    public async Task<IActionResult> FacebookCallback()
+    {
+        logger.LogInformation("Facebook callback hit.");
 
-    private AuthenticationProperties BuildProps(string redirectPath) =>
-      new()
-      {
-          RedirectUri = redirectPath
-      };
+        var result = await authService.ExternalLoginAsync();
+        var frontendUrl = configuration["Frontend:Url"];
+
+        logger.LogInformation("Facebook callback success. Redirecting to frontend.");
+        return Redirect($"{frontendUrl}/auth/callback?token={result.Token}");
+    }
 }
