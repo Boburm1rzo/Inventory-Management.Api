@@ -1,8 +1,5 @@
-﻿using InventoryApp.Domain.Entities;
-using InventoryApp.Infrastructure.Persistance;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
@@ -14,18 +11,6 @@ public static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
-        services.AddDbContextFactory<AppDbContext>(options =>
-        {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-        }, ServiceLifetime.Scoped);
-
-        services.AddIdentity<User, IdentityRole>(options =>
-        {
-            options.User.RequireUniqueEmail = true;
-        })
-        .AddEntityFrameworkStores<AppDbContext>()
-        .AddSignInManager()
-        .AddDefaultTokenProviders();
 
         services.AddAuthentication(options =>
         {
@@ -85,6 +70,17 @@ public static class DependencyInjection
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 [new OpenApiSecuritySchemeReference("bearer", document)] = []
+            });
+        });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("Frontend", policy =>
+            {
+                policy
+                    .WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
             });
         });
 
