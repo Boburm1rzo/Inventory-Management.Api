@@ -1,3 +1,6 @@
 ﻿namespace InventoryApp.Application.DTOs;
 
-public sealed record RegisterDto(string Email, string Password, string ConfirmPassword);
+public sealed record RegisterDto(
+    string DisplayName,
+    string Email,
+    string Password);
