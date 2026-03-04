@@ -33,6 +33,8 @@ app.UseSerilogRequestLogging(options =>
 
 app.UseHttpsRedirection();
 
+app.UseCookiePolicy();
+
 app.UseCors("Frontend");
 
 app.UseRouting();

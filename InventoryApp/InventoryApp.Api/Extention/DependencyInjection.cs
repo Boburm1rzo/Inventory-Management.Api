@@ -14,6 +14,7 @@ public static class DependencyInjection
 
         services.AddAuthentication(options =>
         {
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
@@ -36,21 +37,35 @@ public static class DependencyInjection
             options.ClientId = configuration["Authentication:Google:ClientId"]!;
             options.ClientSecret = configuration["Authentication:Google:ClientSecret"]!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
+            options.CallbackPath = "/api/auth/google-callback";
         })
         .AddFacebook("Facebook", options =>
         {
             options.AppId = configuration["Authentication:Facebook:AppId"]!;
             options.AppSecret = configuration["Authentication:Facebook:AppSecret"]!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
+            options.CallbackPath = "/api/auth/facebook-callback";
 
             options.Scope.Clear();
             options.Scope.Add("public_profile");
         });
 
-        services.ConfigureApplicationCookie(options =>
+        services.ConfigureApplicationCookie(o =>
         {
-            options.Cookie.SameSite = SameSiteMode.None;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            o.Cookie.SameSite = SameSiteMode.None;
+            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        });
+
+        services.ConfigureExternalCookie(o =>
+        {
+            o.Cookie.SameSite = SameSiteMode.None;
+            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        });
+
+        services.Configure<CookiePolicyOptions>(options =>
+        {
+            options.MinimumSameSitePolicy = SameSiteMode.None;
+            options.Secure = CookieSecurePolicy.Always;
         });
 
         services.AddAuthorization();
