@@ -1,7 +1,9 @@
 ﻿using InventoryApp.Application.Configurations;
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Entities;
+using InventoryApp.Domain.Interfaces;
 using InventoryApp.Infrastructure.Persistance;
+using InventoryApp.Infrastructure.Repositories;
 using InventoryApp.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IInventoryRepository, InventoryRepository>();
+        services.AddScoped<IInventoryService, InventoryService>();
         services.AddHttpContextAccessor();
 
         return services;
