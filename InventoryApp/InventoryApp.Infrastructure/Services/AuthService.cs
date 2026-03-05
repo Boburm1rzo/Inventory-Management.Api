@@ -1,4 +1,4 @@
-﻿using InventoryApp.Application.DTOs;
+﻿using InventoryApp.Application.DTOs.Auth;
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Entities;
 using InventoryApp.Domain.Extentions;

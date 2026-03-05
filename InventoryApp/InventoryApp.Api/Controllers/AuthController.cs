@@ -1,4 +1,4 @@
-﻿using InventoryApp.Application.DTOs;
+﻿using InventoryApp.Application.DTOs.Auth;
 using InventoryApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
