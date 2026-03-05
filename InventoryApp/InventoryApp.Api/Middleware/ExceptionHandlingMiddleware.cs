@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using InventoryApp.Domain.Extentions;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Net;
 
 namespace InventoryApp.Api.Middleware;
@@ -39,6 +41,8 @@ public class ExceptionHandlingMiddleware
         {
             ArgumentNullException => (int)HttpStatusCode.BadRequest,
             UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
+            DbUpdateConcurrencyException => (int)HttpStatusCode.Conflict,
+            OptimisticLockException => (int)HttpStatusCode.Conflict,
             _ => (int)HttpStatusCode.InternalServerError
         };
 
