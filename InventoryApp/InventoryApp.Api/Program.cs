@@ -1,6 +1,7 @@
 using InventoryApp.Api.Extention;
 using InventoryApp.Api.Middleware;
 using InventoryApp.Infrastructure.Extentions;
+using InventoryApp.Infrastructure.Seeders;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,5 +43,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+    await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+
 
 app.Run();

@@ -43,6 +43,8 @@ public class ExceptionHandlingMiddleware
             UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
             DbUpdateConcurrencyException => (int)HttpStatusCode.Conflict,
             OptimisticLockException => (int)HttpStatusCode.Conflict,
+            ForbiddenException => (int)HttpStatusCode.Forbidden,
+            NotFoundException => (int)HttpStatusCode.NotFound,
             _ => (int)HttpStatusCode.InternalServerError
         };
 
