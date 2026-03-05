@@ -33,12 +33,11 @@ app.UseSerilogRequestLogging(options =>
 
 app.UseHttpsRedirection();
 
-app.UseCookiePolicy();
+app.UseRouting();
 
 app.UseCors("Frontend");
 
-app.UseRouting();
-
+app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 

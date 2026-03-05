@@ -44,17 +44,17 @@ public class AuthController(
     [HttpGet("login-google")]
     public IActionResult LoginGoogle()
     {
-        var redirectUri = $"{Request.Scheme}://{Request.Host}/api/auth/google-callback";
-        logger.LogInformation("Start Google login. RedirectUri={RedirectUri}", redirectUri);
+        var callbackUrl = Url.Action("GoogleCallback", "Auth", null, Request.Scheme);
+        logger.LogInformation("Start Google login. RedirectUri={RedirectUri}", callbackUrl);
 
-        var props = new AuthenticationProperties { RedirectUri = redirectUri };
+        var props = new AuthenticationProperties { RedirectUri = callbackUrl };
         return Challenge(props, "Google");
     }
 
     [HttpGet("login-facebook")]
     public IActionResult LoginFacebook()
     {
-        var redirectUri = $"{Request.Scheme}://{Request.Host}/api/auth/facebook-callback";
+        var redirectUri = Url.Action(nameof(FacebookCallback), "Auth", null, Request.Scheme);
         logger.LogInformation("Start Facebook login. RedirectUri={RedirectUri}", redirectUri);
 
         var props = new AuthenticationProperties { RedirectUri = redirectUri };

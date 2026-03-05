@@ -37,35 +37,35 @@ public static class DependencyInjection
             options.ClientId = configuration["Authentication:Google:ClientId"]!;
             options.ClientSecret = configuration["Authentication:Google:ClientSecret"]!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
-            options.CallbackPath = "/api/auth/google-callback";
+            options.CallbackPath = "/signin-google";
         })
         .AddFacebook("Facebook", options =>
         {
             options.AppId = configuration["Authentication:Facebook:AppId"]!;
             options.AppSecret = configuration["Authentication:Facebook:AppSecret"]!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
-            options.CallbackPath = "/api/auth/facebook-callback";
 
-            options.Scope.Clear();
+            options.CallbackPath = "/signin-facebook";
             options.Scope.Add("public_profile");
+            options.Scope.Add("email");
         });
 
-        services.ConfigureApplicationCookie(o =>
+        services.ConfigureApplicationCookie(options =>
         {
-            o.Cookie.SameSite = SameSiteMode.None;
-            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.None;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         });
 
-        services.ConfigureExternalCookie(o =>
+        services.ConfigureExternalCookie(options =>
         {
-            o.Cookie.SameSite = SameSiteMode.None;
-            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.None;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.Name = "InventoryApp.External";
         });
 
         services.Configure<CookiePolicyOptions>(options =>
         {
             options.MinimumSameSitePolicy = SameSiteMode.None;
-            options.Secure = CookieSecurePolicy.Always;
         });
 
         services.AddAuthorization();

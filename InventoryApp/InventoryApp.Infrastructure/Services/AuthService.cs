@@ -2,6 +2,8 @@
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Entities;
 using InventoryApp.Domain.Extentions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
@@ -10,7 +12,7 @@ namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class AuthService(
     UserManager<User> userManager,
-    SignInManager<User> signInManager,
+    IHttpContextAccessor httpContextAccessor,
     IJwtTokenService jwtService,
     ILogger<AuthService> logger) : IAuthService
 {
@@ -74,20 +76,33 @@ internal sealed class AuthService(
 
     public async Task<AuthResponseDto> ExternalLoginAsync()
     {
-        var info = await signInManager.GetExternalLoginInfoAsync()
-            ?? throw new DomainException("External login info not found.");
+        var httpContext = httpContextAccessor.HttpContext
+             ?? throw new DomainException("Context not found.");
 
-        logger.LogInformation("External login callback. Provider={Provider}", info.LoginProvider);
+        var authResult = await httpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
 
-        var user = await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+        if (!authResult.Succeeded || authResult.Principal == null)
+        {
+            logger.LogWarning("External authentication failed: {Reason}", authResult.Failure?.Message);
+            throw new DomainException("External login info not found.");
+        }
+
+        var principal = authResult.Principal;
+        var loginProvider = authResult.Properties?.Items[".AuthScheme"] ?? "External";
+        var providerKey = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new DomainException("Provider key not found.");
+
+        logger.LogInformation("External login callback. Provider={Provider}", loginProvider);
+
+        var user = await userManager.FindByLoginAsync(loginProvider, providerKey);
 
         if (user is null)
         {
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            logger.LogInformation("External login user not linked yet. Provider={Provider} Email={Email}", info.LoginProvider, email);
+            var email = principal.FindFirstValue(ClaimTypes.Email);
+            logger.LogInformation("External login user not linked. Provider={Provider} Email={Email}", loginProvider, email);
 
             if (string.IsNullOrWhiteSpace(email))
-                throw new DomainException("Email not found from external provider.");
+                throw new DomainException("Email not provided by external service.");
 
             user = await userManager.FindByEmailAsync(email);
 
@@ -97,29 +112,32 @@ internal sealed class AuthService(
                 {
                     UserName = email,
                     Email = email,
-                    DisplayName = info.Principal
-                        .FindFirstValue(ClaimTypes.Name) ?? email,
+                    DisplayName = principal.FindFirstValue(ClaimTypes.Name) ?? email,
                     EmailConfirmed = true
                 };
 
-                await userManager.CreateAsync(user);
-                logger.LogInformation("External user created. UserId={UserId} Email={Email}", user.Id, user.Email);
+                var createResult = await userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    throw new DomainException(string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                }
+
+                logger.LogInformation("New user created via {Provider}. UserId={UserId}", loginProvider, user.Id);
             }
 
+            var info = new UserLoginInfo(loginProvider, providerKey, loginProvider);
             await userManager.AddLoginAsync(user, info);
-            logger.LogInformation("External login linked. UserId={UserId} Provider={Provider}", user.Id, info.LoginProvider);
         }
 
         if (user.IsBlocked)
         {
-            logger.LogWarning("External login blocked. UserId={UserId} Email={Email}", user.Id, user.Email);
             throw new DomainException("Your account has been blocked.");
         }
 
+        await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
         var roles = await userManager.GetRolesAsync(user);
         var token = jwtService.GenerateToken(user, roles);
-
-        logger.LogInformation("External login success. UserId={UserId} Provider={Provider}", user.Id, info.LoginProvider);
 
         return new AuthResponseDto(token, user.DisplayName, user.Email!);
     }
