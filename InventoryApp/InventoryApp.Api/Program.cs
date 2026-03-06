@@ -10,8 +10,8 @@ builder.Host.UseSerilog((ctx, lc) =>
     lc.ReadFrom.Configuration(ctx.Configuration)
       .Enrich.FromLogContext());
 
-builder.Services.AddApi(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApi(builder.Configuration);
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
