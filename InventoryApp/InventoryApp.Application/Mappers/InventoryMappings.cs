@@ -26,7 +26,7 @@ public static class InventoryMappings
         inventory.Owner.DisplayName,
         inventory.CreatedAt);
 
-    public static Inventory MapToEntity(this CreateInventoryDto dto) => new Inventory
+    public static Inventory MapToEntity(this CreateInventoryDto dto) => new()
     {
         Title = dto.Title,
         Description = dto.Description,
