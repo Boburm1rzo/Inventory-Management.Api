@@ -8,15 +8,6 @@ namespace InventoryApp.Infrastructure.Repositories;
 
 internal sealed class InventoryRepository(AppDbContext context) : IInventoryRepository
 {
-    public async Task<Inventory?> GetByIdAsync(int id)
-        => await context.Inventories
-            .Include(x => x.Owner)
-            .Include(x => x.Category)
-            .Include(x => x.Fields)
-            .Include(x => x.InventoryTags)
-                .ThenInclude(t => t.Tag)
-            .FirstOrDefaultAsync(x => x.Id == id);
-
     public async Task<PagedResult<Inventory>> GetPagedAsync(int page, int size)
     {
         var query = context.Inventories
@@ -26,20 +17,29 @@ internal sealed class InventoryRepository(AppDbContext context) : IInventoryRepo
 
         var total = await query.CountAsync();
 
-        var items = await query
+        var inventories = await query
             .OrderByDescending(x => x.CreatedAt)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
 
-        return new PagedResult<Inventory>
+        return new()
         {
-            Items = items,
+            Items = inventories,
             Page = page,
             PageSize = size,
             TotalCount = total
         };
     }
+
+    public async Task<Inventory?> GetByIdAsync(int id)
+        => await context.Inventories
+            .Include(x => x.Owner)
+            .Include(x => x.Category)
+            .Include(x => x.Fields)
+            .Include(x => x.InventoryTags)
+                .ThenInclude(t => t.Tag)
+            .FirstOrDefaultAsync(x => x.Id == id);
 
     public async Task AddAsync(Inventory inventory)
     {
