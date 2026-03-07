@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddHttpContextAccessor();
+        services.AddScoped<ICustomIdGenerator, CustomIdGenerator>();
 
         return services;
     }
