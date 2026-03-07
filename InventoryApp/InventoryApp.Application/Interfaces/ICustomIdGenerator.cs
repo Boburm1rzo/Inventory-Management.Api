@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using InventoryApp.Domain.Entities;
 
 namespace InventoryApp.Application.Interfaces;
 
-internal interface ICustomIdGenerator
+public interface ICustomIdGenerator
 {
+    string Generate(List<InventoryIdFormatPart> parts, int nextSequence);
 }

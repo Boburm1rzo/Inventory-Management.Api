@@ -4,6 +4,6 @@ namespace InventoryApp.Application.DTOs.InventoryIdFormat;
 
 public sealed record InventoryIdFormatPartDto(
     int Id,
-    IdFormatPartType type,
+    IdFormatPartType Type,
     int Order,
     string? Config);

@@ -4,5 +4,4 @@ public sealed record UpdateInventoryFieldDto(
     int Id,
     string Title,
     string? Description,
-    bool DisplatInTable,
-    int Order);
+    bool DisplatInTable);
