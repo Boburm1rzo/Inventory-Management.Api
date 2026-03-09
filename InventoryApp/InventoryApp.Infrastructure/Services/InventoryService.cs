@@ -2,15 +2,18 @@
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Application.Mappers;
 using InventoryApp.Domain.Common;
+using InventoryApp.Domain.Entities;
 using InventoryApp.Domain.Extentions;
 using InventoryApp.Domain.Interfaces;
+using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class InventoryService(
     IInventoryRepository repository,
-    ICurrentUserService currentUserService) : IInventoryService
+    ICurrentUserService currentUserService,
+    AppDbContext context) : IInventoryService
 {
     public async Task<PagedResult<InventoryListItemDto>> GetPagedAsync(int page, int size)
     {
@@ -18,7 +21,7 @@ internal sealed class InventoryService(
 
         return new PagedResult<InventoryListItemDto>
         {
-            Items = result.Items.Select(i => i.MapToListItemDto()).ToList(),
+            Items = [.. result.Items.Select(i => i.MapToListItemDto())],
             TotalCount = result.TotalCount,
             Page = page,
             PageSize = size
@@ -27,8 +30,7 @@ internal sealed class InventoryService(
 
     public async Task<InventoryDto> GetByIdAsync(int id)
     {
-        var inventory = await repository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Inventory {id} not found.");
+        var inventory = await GetOrThrowAsync(id);
 
         return inventory.MapToDto();
     }
@@ -45,8 +47,7 @@ internal sealed class InventoryService(
 
     public async Task<InventoryDto> UpdateAsync(int id, UpdateInventoryDto dto)
     {
-        var inventory = await repository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Inventory {id} not found.");
+        var inventory = await GetOrThrowAsync(id);
 
         if (inventory.OwnerId != currentUserService.UserId && !currentUserService.IsAdmin)
             throw new ForbiddenException("You don't have access.");
@@ -57,6 +58,20 @@ internal sealed class InventoryService(
         inventory.IsPublic = dto.IsPublic;
         inventory.CategoryId = dto.CategoryId;
         inventory.UpdatedAt = DateTime.UtcNow;
+
+        inventory.InventoryTags.Clear();
+        foreach (var tagName in dto.Tags ?? [])
+        {
+            var tag = await context.Tags
+                .FirstOrDefaultAsync(t => t.Name == tagName)
+                ?? new Tag { Name = tagName };
+
+            inventory.InventoryTags.Add(new InventoryTag { Tag = tag });
+        }
+
+        context.Entry(inventory)
+            .Property(i => i.RowVersion)
+            .OriginalValue = dto.RowVersion;
 
         try
         {
@@ -72,12 +87,19 @@ internal sealed class InventoryService(
 
     public async Task DeleteAsync(int id)
     {
-        var inventory = await repository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Inventory {id} not found.");
+        var inventory = await GetOrThrowAsync(id);
 
         if (inventory.OwnerId != currentUserService.UserId && !currentUserService.IsAdmin)
             throw new ForbiddenException("You don't have access.");
 
         await repository.DeleteAsync(id);
+    }
+
+    private async Task<Inventory> GetOrThrowAsync(int id)
+    {
+        var inventory = await repository.GetByIdAsync(id)
+           ?? throw new NotFoundException($"Inventory {id} not found.");
+
+        return inventory;
     }
 }
