@@ -6,5 +6,5 @@ public sealed record UpdateInventoryDto(
     int CategoryId,
     string ImageUrl,
     bool IsPublic,
-    List<string> tags,
+    List<string> Tags,
     byte[] RowVersion);
