@@ -45,6 +45,7 @@ public class ExceptionHandlingMiddleware
             OptimisticLockException => (int)HttpStatusCode.Conflict,
             ForbiddenException => (int)HttpStatusCode.Forbidden,
             NotFoundException => (int)HttpStatusCode.NotFound,
+            DuplicateCustomIdExtention => (int)HttpStatusCode.Conflict,
             _ => (int)HttpStatusCode.InternalServerError
         };
 

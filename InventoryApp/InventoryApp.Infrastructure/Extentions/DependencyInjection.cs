@@ -2,6 +2,7 @@
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Entities;
 using InventoryApp.Domain.Interfaces;
+using InventoryApp.Infrastructure.Helpers;
 using InventoryApp.Infrastructure.Persistance;
 using InventoryApp.Infrastructure.Repositories;
 using InventoryApp.Infrastructure.Services;
@@ -42,6 +43,10 @@ public static class DependencyInjection
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICustomIdGenerator, CustomIdGenerator>();
+        services.AddScoped<IItemService, ItemService>();
+        services.AddScoped<IItemRepository, ItemRepository>();
+        services.AddScoped<ItemAccessChecker>();
+        services.AddScoped<InventoryAccessChecker>();
 
         return services;
     }
