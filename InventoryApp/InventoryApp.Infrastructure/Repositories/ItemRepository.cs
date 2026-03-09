@@ -11,6 +11,7 @@ internal sealed class ItemRepository(AppDbContext context) : IItemRepository
     public async Task<PagedResult<Item>> GetPagedAsync(int inventoryId, int page, int size)
     {
         var query = context.Items
+            .Where(x => x.InventoryId == inventoryId)
             .Include(x => x.CreatedBy)
             .Include(x => x.FieldValues)
                 .ThenInclude(f => f.Field)
@@ -48,7 +49,6 @@ internal sealed class ItemRepository(AppDbContext context) : IItemRepository
 
     public async Task UpdateAsync(Item item)
     {
-        context.Items.Update(item);
         await context.SaveChangesAsync();
     }
 
