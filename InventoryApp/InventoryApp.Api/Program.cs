@@ -1,4 +1,5 @@
 using InventoryApp.Api.Extention;
+using InventoryApp.Api.Hubs;
 using InventoryApp.Api.Middleware;
 using InventoryApp.Infrastructure.Extentions;
 using InventoryApp.Infrastructure.Seeders;
@@ -40,6 +41,7 @@ app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<DiscussionHub>("/hubs/discussion");
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
