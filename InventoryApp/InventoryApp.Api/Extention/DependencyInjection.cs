@@ -1,4 +1,6 @@
-﻿using InventoryApp.Application.Configurations;
+﻿using InventoryApp.Api.Services;
+using InventoryApp.Application.Configurations;
+using InventoryApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -104,6 +106,9 @@ public static class DependencyInjection
                     .AllowAnyMethod();
             });
         });
+
+        services.AddSignalR();
+        services.AddScoped<IDiscussionHubService, DiscussionHubService>();
 
         return services;
     }

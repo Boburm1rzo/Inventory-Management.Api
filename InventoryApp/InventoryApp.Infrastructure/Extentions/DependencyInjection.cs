@@ -45,8 +45,10 @@ public static class DependencyInjection
         services.AddScoped<ICustomIdGenerator, CustomIdGenerator>();
         services.AddScoped<IItemService, ItemService>();
         services.AddScoped<IItemRepository, ItemRepository>();
-        services.AddScoped<ItemAccessChecker>();
-        services.AddScoped<InventoryAccessChecker>();
+        services.AddScoped<AccessChecker>();
+        services.AddScoped<IInventoryAccessService, InventoryAccessService>();
+        services.AddScoped<IPostService, PostService>();
+        services.AddScoped<ISearchService, SearchService>();
 
         return services;
     }
