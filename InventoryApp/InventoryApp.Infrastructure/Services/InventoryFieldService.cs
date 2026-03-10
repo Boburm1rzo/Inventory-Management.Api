@@ -10,7 +10,7 @@ namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class InventoryFieldService(
     AppDbContext context,
-    InventoryAccessChecker accessChecker) : IInventoryFieldService
+    AccessChecker accessChecker) : IInventoryFieldService
 {
     public async Task<List<InventoryFieldDto>> GetFieldsAsync(int inventoryId)
     {
@@ -26,7 +26,7 @@ internal sealed class InventoryFieldService(
 
     public async Task<InventoryFieldDto> AddFieldAsync(int inventoryId, CreateInventoryFieldDto dto)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         var allFields = await context.InventoryFields
             .Where(x => x.InventoryId == inventoryId)
@@ -49,7 +49,7 @@ internal sealed class InventoryFieldService(
 
     public async Task DeleteFieldAsync(int inventoryId, int fieldId)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         await context.InventoryFields
             .Where(x => x.Id == fieldId && x.InventoryId == inventoryId)
@@ -58,7 +58,7 @@ internal sealed class InventoryFieldService(
 
     public async Task ReorderFieldsAsync(int inventoryId, ReorderFieldsDto dto)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         var fields = await context.InventoryFields
             .Where(x => x.InventoryId == inventoryId)
@@ -76,7 +76,7 @@ internal sealed class InventoryFieldService(
 
     public async Task<InventoryFieldDto> UpdateFieldAsync(int inventoryId, int fieldId, UpdateInventoryFieldDto dto)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         var field = await context.InventoryFields
             .FirstOrDefaultAsync(x => x.Id == fieldId && x.InventoryId == inventoryId)

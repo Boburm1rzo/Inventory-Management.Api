@@ -9,7 +9,7 @@ namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class InventoryIdFormatService(
     AppDbContext context,
-    InventoryAccessChecker accessChecker,
+    AccessChecker accessChecker,
     ICustomIdGenerator customIdGenerator) : IInventoryIdFormatService
 {
     public async Task<List<InventoryIdFormatPartDto>> GetPartsAsync(int inventoryId)
@@ -28,7 +28,7 @@ internal sealed class InventoryIdFormatService(
 
     public async Task<InventoryIdFormatPartDto> AddPartAsync(int inventoryId, CreateIdFormatPartDto dto)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         var order = await context.InventoryIdFormatParts
             .CountAsync(x => x.InventoryId == inventoryId);
@@ -44,7 +44,7 @@ internal sealed class InventoryIdFormatService(
 
     public async Task DeletePartAsync(int inventoryId, int partId)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         await context.InventoryIdFormatParts
             .Where(x => x.InventoryId == inventoryId && x.Id == partId)
@@ -53,7 +53,7 @@ internal sealed class InventoryIdFormatService(
 
     public async Task ReorderPartsAsync(int inventoryId, ReorderIdFormatPartsDto dto)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckInventoryAsync(inventoryId);
 
         var parts = await context.InventoryIdFormatParts
             .Where(x => x.InventoryId == inventoryId)

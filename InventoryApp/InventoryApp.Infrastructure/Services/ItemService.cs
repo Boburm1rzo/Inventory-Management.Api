@@ -14,7 +14,7 @@ namespace InventoryApp.Infrastructure.Services;
 internal sealed class ItemService(
     IItemRepository repository,
     ICurrentUserService currentUserService,
-    ItemAccessChecker accessChecker,
+    AccessChecker accessChecker,
     AppDbContext context,
     ICustomIdGenerator customIdGenerator) : IItemService
 {
@@ -40,7 +40,7 @@ internal sealed class ItemService(
 
     public async Task<ItemDto> CreateAsync(int inventoryId, CreateItemDto dto)
     {
-        await accessChecker.CheckAsync(inventoryId);
+        await accessChecker.CheckItemAsync(inventoryId);
 
         var parts = await context.InventoryIdFormatParts
                    .Where(x => x.InventoryId == inventoryId)
