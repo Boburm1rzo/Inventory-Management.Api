@@ -49,6 +49,9 @@ public static class DependencyInjection
         services.AddScoped<IInventoryAccessService, InventoryAccessService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ISearchService, SearchService>();
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<ILikeService, LikeService>();
+        services.AddScoped<IPersonalService, PersonalService>();
 
         return services;
     }
