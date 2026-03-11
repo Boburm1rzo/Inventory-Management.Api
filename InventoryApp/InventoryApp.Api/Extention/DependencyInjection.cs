@@ -42,15 +42,24 @@ public static class DependencyInjection
         })
         .AddGoogle("Google", options =>
         {
-            options.ClientId = configuration["Authentication:Google:ClientId"]!;
-            options.ClientSecret = configuration["Authentication:Google:ClientSecret"]!;
+            using var scope = services.BuildServiceProvider();
+            var configuration = scope.GetRequiredService<IOptions<AuthenticationSettings>>();
+            var settings = configuration.Value;
+
+            options.ClientId = settings.GoogleClientId!;
+            options.ClientSecret = settings.GoogleClientSecret!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
             options.CallbackPath = "/signin-google";
         })
         .AddFacebook("Facebook", options =>
         {
-            options.AppId = configuration["Authentication:Facebook:AppId"]!;
-            options.AppSecret = configuration["Authentication:Facebook:AppSecret"]!;
+
+            using var scope = services.BuildServiceProvider();
+            var configuration = scope.GetRequiredService<IOptions<AuthenticationSettings>>();
+            var settings = configuration.Value;
+
+            options.AppId = settings.FacebookAppId!;
+            options.AppSecret = settings.FacebookAppSecret!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
 
             options.CallbackPath = "/signin-facebook";

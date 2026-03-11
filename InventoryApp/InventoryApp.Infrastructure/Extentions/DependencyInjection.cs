@@ -25,6 +25,11 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(JwtSettings.SectionName))
             .ValidateOnStart();
 
+        services
+            .AddOptions<AuthenticationSettings>()
+            .Bind(configuration.GetSection(AuthenticationSettings.SectionName))
+            .ValidateOnStart();
+
         services.AddIdentity<User, IdentityRole>(options =>
         {
             options.User.RequireUniqueEmail = true;
