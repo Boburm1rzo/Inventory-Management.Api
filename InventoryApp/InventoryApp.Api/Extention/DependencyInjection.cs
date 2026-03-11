@@ -3,7 +3,6 @@ using InventoryApp.Application.Configurations;
 using InventoryApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
@@ -16,6 +15,14 @@ public static class DependencyInjection
     {
         services.AddControllers();
 
+        services
+            .AddOptions<AuthenticationSettings>()
+            .Bind(configuration.GetSection(AuthenticationSettings.SectionName))
+            .ValidateOnStart();
+
+        var authSettings = configuration.GetSection(AuthenticationSettings.SectionName).Get<AuthenticationSettings>();
+        var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
+
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -24,42 +31,29 @@ public static class DependencyInjection
         })
         .AddJwtBearer(options =>
         {
-            using var scope = services.BuildServiceProvider();
-            var configuration = scope.GetRequiredService<IOptions<JwtSettings>>();
-            var settings = configuration.Value;
-
-            var key = settings.Key ?? throw new InvalidOperationException("Jwt:Key missing.");
+            var key = jwtSettings?.Key ?? throw new InvalidOperationException("Jwt:Key missing.");
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = settings.Issuer,
-                ValidAudience = settings.Audience,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
             };
         })
         .AddGoogle("Google", options =>
         {
-            using var scope = services.BuildServiceProvider();
-            var configuration = scope.GetRequiredService<IOptions<AuthenticationSettings>>();
-            var settings = configuration.Value;
-
-            options.ClientId = settings.GoogleClientId!;
-            options.ClientSecret = settings.GoogleClientSecret!;
+            options.ClientId = authSettings.GoogleClientId!;
+            options.ClientSecret = authSettings.GoogleClientSecret!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
             options.CallbackPath = "/signin-google";
         })
         .AddFacebook("Facebook", options =>
         {
-
-            using var scope = services.BuildServiceProvider();
-            var configuration = scope.GetRequiredService<IOptions<AuthenticationSettings>>();
-            var settings = configuration.Value;
-
-            options.AppId = settings.FacebookAppId!;
-            options.AppSecret = settings.FacebookAppSecret!;
+            options.AppId = authSettings.FacebookAppId!;
+            options.AppSecret = authSettings.FacebookAppSecret!;
             options.SignInScheme = IdentityConstants.ExternalScheme;
 
             options.CallbackPath = "/signin-facebook";
