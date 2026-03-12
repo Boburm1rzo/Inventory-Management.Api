@@ -24,10 +24,10 @@ public static class DependencyInjection
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
 
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($" ################### google clientId: {authSettings.GoogleClientId} ###################");
-        Console.WriteLine($" ################### google Secret : {authSettings.GoogleClientSecret} ###################");
-        Console.WriteLine($" ################### facebook ApiId: {authSettings.FacebookAppId} ###################");
-        Console.WriteLine($" ################### facebook Secret: {authSettings.FacebookAppSecret} ###################");
+        Console.WriteLine($" ################### google clientId: {authSettings?.GoogleClientId} ###################");
+        Console.WriteLine($" ################### google Secret : {authSettings?.GoogleClientSecret} ###################");
+        Console.WriteLine($" ################### facebook ApiId: {authSettings?.FacebookAppId} ###################");
+        Console.WriteLine($" ################### facebook Secret: {authSettings?.FacebookAppSecret} ###################");
         Console.ResetColor();
 
         services.AddAuthentication(options =>
