@@ -104,9 +104,10 @@ public static class DependencyInjection
             options.AddPolicy("Frontend", policy =>
             {
                 policy
-                    .WithOrigins("https://inventoryb.netlify.app", "http://localhost:5173")
+                    .WithOrigins("https://inventoryapp-web.onrender.com", "http://localhost:5173")
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 
