@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     outputs:
       image: ${{ steps.image.outputs.full }}
 
@@ -70,7 +71,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           source: ${{ env.COMPOSE_SOURCE }}
           target: ${{ env.APP_DIR }}
-          strip_components: 2 # Bu juda muhim: Ichki papkalarni olib tashlab, to'g'ridan-to'g'ri asosiy papkaga joylaydi
+          strip_components: 2
           overwrite: true
 
       - name: Deploy via SSH
@@ -84,33 +85,9 @@ jobs:
             set -e
 
             APP_DIR="${{ env.APP_DIR }}"
-            IMAGE="${{ needs.build.outputs.image }}"
             COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 
-            mkdir -p "$APP_DIR"
             cd "$APP_DIR"
-
-            # 1. Eski keraksiz papkalar bo'lsa o'chirib tashlaymiz (Tozalik uchun)
-            rm -rf "$APP_DIR/InventoryApp"
-
-            echo "📁 Files in $APP_DIR:"
-            ls -la
-
-            if [ ! -f "$COMPOSE_FILE" ]; then
-              echo "❌ docker-compose.yml not found!"
-              exit 1
-            fi
-
-            # 2. Yangi DOCKER_IMAGE manzilini .env faylga xavfsiz kiritish (Boshqa kalitlarga tegmaydi)
-            if [ ! -f ".env" ]; then
-              echo "DOCKER_IMAGE=$IMAGE" > .env
-            else
-              if grep -q '^DOCKER_IMAGE=' .env; then
-                sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=$IMAGE|" .env
-              else
-                echo "DOCKER_IMAGE=$IMAGE" >> .env
-              fi
-            fi
 
             echo "🔐 Login to GHCR..."
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
