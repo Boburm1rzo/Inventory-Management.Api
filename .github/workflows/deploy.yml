@@ -87,9 +87,12 @@ jobs:
             APP_DIR="${{ env.APP_DIR }}"
             COMPOSE_FILE="$APP_DIR/docker-compose.yml"
 
+            # Papka mavjudligini tekshiramiz va uning ichiga kiramiz
+            mkdir -p "$APP_DIR"
             cd "$APP_DIR"
 
             echo "🔐 Login to GHCR..."
+            # GitHub parolingiz orqali ghcr.io ga xavfsiz ulanish
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "⬇ Pull latest image..."
@@ -99,9 +102,11 @@ jobs:
             docker compose -f "$COMPOSE_FILE" up -d --no-build api
 
             echo "🧹 Cleanup old images..."
+            # Eski, keraksiz image'larni o'chirib server xotirasini tozalaymiz
             docker image prune -f
 
             echo "🛠 Run migrations (if exists)..."
+            # Bazani yangilashga urinib ko'radi, agar xato qilsa (|| true) dasturni qulatmaydi
             docker compose -f "$COMPOSE_FILE" exec -T api dotnet InventoryApp.Api.dll --migrate || true
 
             echo "✅ DEPLOY SUCCESS"
