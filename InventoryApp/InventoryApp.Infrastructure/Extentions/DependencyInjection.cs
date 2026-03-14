@@ -47,11 +47,15 @@ public static class DependencyInjection
         services.AddScoped<IItemRepository, ItemRepository>();
         services.AddScoped<AccessChecker>();
         services.AddScoped<IInventoryAccessService, InventoryAccessService>();
+        services.AddScoped<IInventoryFieldService, InventoryFieldService>();
+        services.AddScoped<IInventoryIdFormatService, InventoryIdFormatService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ILikeService, LikeService>();
         services.AddScoped<IPersonalService, PersonalService>();
+        services.AddScoped<ITagService, TagService>();
+        services.AddScoped<ICategoryService, CategoryService>();
 
         return services;
     }
