@@ -3,6 +3,6 @@
 public sealed record InventoryListItemDto(
     int Id,
     string Title,
-    string CategoryName,
+    string? CategoryName,
     string OwnerName,
     DateTime CreatedAt);

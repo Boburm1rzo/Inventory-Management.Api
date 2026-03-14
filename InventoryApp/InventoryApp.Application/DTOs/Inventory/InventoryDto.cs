@@ -7,7 +7,7 @@ public sealed record InventoryDto(
     string? ImageUrl,
     bool IsPublic,
     string OwnerId,
-    string OwnerName,
+    string? OwnerName,
     int? CategoryId,
     string? CategoryName,
     List<string> Tags,
