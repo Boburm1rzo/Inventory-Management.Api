@@ -4,6 +4,6 @@ public sealed record CreateInventoryDto(
     string Title,
     string Description,
     int CategoryId,
-    string ImageUrl,
+    string? ImageUrl,
     bool IsPublic,
-    List<int> tagIds);
+    List<string> Tags);
