@@ -21,7 +21,6 @@ try
 
     builder.Host.UseSerilog((ctx, lc) =>
         lc.ReadFrom.Configuration(ctx.Configuration)
-          .WriteTo.Console()
           .Enrich.FromLogContext());
 
     builder.Services.AddInfrastructure(builder.Configuration);

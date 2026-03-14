@@ -51,8 +51,8 @@ public class ExceptionHandlingMiddleware
 
         var response = new
         {
-            StatusCode = context.Response.StatusCode,
-            Message = ex.Message,
+            context.Response.StatusCode,
+            ex.Message,
             traceId
         };
 
