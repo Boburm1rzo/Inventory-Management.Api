@@ -40,6 +40,7 @@ internal sealed class InventoryService(
         var inventory = dto.MapToEntity();
         inventory.OwnerId = currentUserService.UserId;
 
+        await AttachTagsAsync(inventory, dto.Tags);
         await repository.AddAsync(inventory);
 
         return inventory.MapToDto();
@@ -60,14 +61,8 @@ internal sealed class InventoryService(
         inventory.UpdatedAt = DateTime.UtcNow;
 
         inventory.InventoryTags.Clear();
-        foreach (var tagName in dto.Tags ?? [])
-        {
-            var tag = await context.Tags
-                .FirstOrDefaultAsync(t => t.Name == tagName)
-                ?? new Tag { Name = tagName };
 
-            inventory.InventoryTags.Add(new InventoryTag { Tag = tag });
-        }
+        await AttachTagsAsync(inventory, dto.Tags);
 
         context.Entry(inventory)
             .Property(i => i.RowVersion)
@@ -101,5 +96,17 @@ internal sealed class InventoryService(
            ?? throw new NotFoundException($"Inventory {id} not found.");
 
         return inventory;
+    }
+
+    private async Task AttachTagsAsync(Inventory inventory, List<string>? tagNames)
+    {
+        foreach (var tagName in tagNames ?? [])
+        {
+            var tag = await context.Tags
+                .FirstOrDefaultAsync(t => t.Name == tagName)
+                ?? new Tag { Name = tagName };
+
+            inventory.InventoryTags.Add(new InventoryTag { Tag = tag });
+        }
     }
 }

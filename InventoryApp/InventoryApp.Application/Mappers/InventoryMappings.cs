@@ -12,7 +12,7 @@ public static class InventoryMappings
         inventory.ImageUrl,
         inventory.IsPublic,
         inventory.OwnerId,
-        inventory.Owner.DisplayName,
+        inventory.Owner?.DisplayName,
         inventory.CategoryId,
         inventory.Category?.Name,
         inventory.InventoryTags.Select(t => t.Tag.Name).ToList(),
