@@ -1,7 +1,7 @@
 ﻿using InventoryApp.Domain.Extentions;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using System.Net;
+using System.Text.Json;
 
 namespace InventoryApp.Api.Middleware;
 
@@ -27,8 +27,8 @@ public class ExceptionHandlingMiddleware
             var traceId = context.TraceIdentifier;
 
             _logger.LogError(ex,
-                 "Unhandled exception. TraceId={TraceId} Method={Method} Path={Path}",
-                 traceId, context.Request.Method, context.Request.Path);
+                "🚨 SERVER ERROR! TraceId: {TraceId} | Method: {Method} | Path: {Path} | Error: {ErrorMessage}",
+                traceId, context.Request.Method, context.Request.Path, ex.Message);
 
             await HandleExceptionAsync(context, ex, traceId);
         }
@@ -37,6 +37,7 @@ public class ExceptionHandlingMiddleware
     private Task HandleExceptionAsync(HttpContext context, Exception ex, string traceId)
     {
         context.Response.ContentType = "application/json";
+
         context.Response.StatusCode = ex switch
         {
             ArgumentNullException => (int)HttpStatusCode.BadRequest,
@@ -46,16 +47,18 @@ public class ExceptionHandlingMiddleware
             ForbiddenException => (int)HttpStatusCode.Forbidden,
             NotFoundException => (int)HttpStatusCode.NotFound,
             DuplicateCustomIdExtention => (int)HttpStatusCode.Conflict,
+            DomainException => (int)HttpStatusCode.InternalServerError,
             _ => (int)HttpStatusCode.InternalServerError
         };
 
         var response = new
         {
-            context.Response.StatusCode,
-            ex.Message,
-            traceId
+            StatusCode = context.Response.StatusCode,
+            Message = ex.Message,
+            TraceId = traceId
         };
 
-        return context.Response.WriteAsync(JsonConvert.SerializeObject(response));
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        return context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
     }
 }
