@@ -59,6 +59,13 @@ public class ExceptionHandlingMiddleware
             TraceId = traceId
         };
 
+        _logger.LogError(
+        "Clientga xatolik qaytarilmoqda. \nStatusCode: {StatusCode} \nTraceId: {TraceId} \nMessage: {Message} \nStackTrace: \n{StackTrace}",
+        response.StatusCode,
+        response.TraceId,
+        response.Message,
+        response.Trace);
+
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         return context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
     }
