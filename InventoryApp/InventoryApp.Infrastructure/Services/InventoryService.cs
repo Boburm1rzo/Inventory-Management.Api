@@ -7,13 +7,15 @@ using InventoryApp.Domain.Extentions;
 using InventoryApp.Domain.Interfaces;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class InventoryService(
     IInventoryRepository repository,
     ICurrentUserService currentUserService,
-    AppDbContext context) : IInventoryService
+    AppDbContext context,
+    ILogger<InventoryService> logger) : IInventoryService
 {
     public async Task<PagedResult<InventoryListItemDto>> GetPagedAsync(int page, int size)
     {
@@ -31,7 +33,6 @@ internal sealed class InventoryService(
     public async Task<InventoryDto> GetByIdAsync(int id)
     {
         var inventory = await GetOrThrowAsync(id);
-
         return inventory.MapToDto();
     }
 
@@ -43,6 +44,7 @@ internal sealed class InventoryService(
         await AttachTagsAsync(inventory, dto.Tags);
         await repository.AddAsync(inventory);
 
+        logger.LogInformation("User {UserId} created inventory {InventoryId} '{InventoryTitle}'.", currentUserService.UserId, inventory.Id, inventory.Title);
         return inventory.MapToDto();
     }
 
@@ -51,7 +53,10 @@ internal sealed class InventoryService(
         var inventory = await GetOrThrowAsync(id);
 
         if (inventory.OwnerId != currentUserService.UserId && !currentUserService.IsAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to update inventory {InventoryId} without permission.", currentUserService.UserId, id);
             throw new ForbiddenException("You don't have access.");
+        }
 
         inventory.Title = dto.Title;
         inventory.Description = dto.Description;
@@ -61,7 +66,6 @@ internal sealed class InventoryService(
         inventory.UpdatedAt = DateTime.UtcNow;
 
         inventory.InventoryTags.Clear();
-
         await AttachTagsAsync(inventory, dto.Tags);
 
         context.Entry(inventory)
@@ -71,9 +75,11 @@ internal sealed class InventoryService(
         try
         {
             await repository.UpdateAsync(inventory);
+            logger.LogInformation("Inventory {InventoryId} updated successfully by user {UserId}.", id, currentUserService.UserId);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
+            logger.LogWarning(ex, "Concurrency conflict occurred while updating inventory {InventoryId}.", id);
             throw new OptimisticLockException();
         }
 
@@ -85,16 +91,23 @@ internal sealed class InventoryService(
         var inventory = await GetOrThrowAsync(id);
 
         if (inventory.OwnerId != currentUserService.UserId && !currentUserService.IsAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to delete inventory {InventoryId} without permission.", currentUserService.UserId, id);
             throw new ForbiddenException("You don't have access.");
+        }
 
         await repository.DeleteAsync(id);
+        logger.LogInformation("Inventory {InventoryId} deleted successfully by user {UserId}.", id, currentUserService.UserId);
     }
 
     private async Task<Inventory> GetOrThrowAsync(int id)
     {
-        var inventory = await repository.GetByIdAsync(id)
-           ?? throw new NotFoundException($"Inventory {id} not found.");
-
+        var inventory = await repository.GetByIdAsync(id);
+        if (inventory == null)
+        {
+            logger.LogWarning("Inventory {InventoryId} not found.", id);
+            throw new NotFoundException($"Inventory {id} not found.");
+        }
         return inventory;
     }
 
@@ -102,8 +115,7 @@ internal sealed class InventoryService(
     {
         foreach (var tagName in tagNames ?? [])
         {
-            var tag = await context.Tags
-                .FirstOrDefaultAsync(t => t.Name == tagName)
+            var tag = await context.Tags.FirstOrDefaultAsync(t => t.Name == tagName)
                 ?? new Tag { Name = tagName };
 
             inventory.InventoryTags.Add(new InventoryTag { Tag = tag });

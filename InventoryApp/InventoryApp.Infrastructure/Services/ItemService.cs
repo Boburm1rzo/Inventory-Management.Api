@@ -8,6 +8,7 @@ using InventoryApp.Domain.Interfaces;
 using InventoryApp.Infrastructure.Helpers;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryApp.Infrastructure.Services;
 
@@ -16,7 +17,8 @@ internal sealed class ItemService(
     ICurrentUserService currentUserService,
     AccessChecker accessChecker,
     AppDbContext context,
-    ICustomIdGenerator customIdGenerator) : IItemService
+    ICustomIdGenerator customIdGenerator,
+    ILogger<ItemService> logger) : IItemService
 {
     public async Task<PagedResult<ItemListItemDto>> GetPagedAsync(int inventoryId, int page, int size)
     {
@@ -34,7 +36,6 @@ internal sealed class ItemService(
     public async Task<ItemDto> GetByIdAsync(int inventoryId, int itemId)
     {
         var item = await GetOrThrowAsync(inventoryId, itemId);
-
         return item.MapToDto();
     }
 
@@ -47,11 +48,9 @@ internal sealed class ItemService(
                    .OrderBy(x => x.Order)
                    .ToListAsync();
 
-        var nextSeq = await context.Items
-            .CountAsync(x => x.InventoryId == inventoryId) + 1;
+        var nextSeq = await context.Items.CountAsync(x => x.InventoryId == inventoryId) + 1;
 
         var item = dto.MapToEntity();
-
         item.InventoryId = inventoryId;
         item.CreatedById = currentUserService.UserId;
         item.CustomId = customIdGenerator.Generate(parts, nextSeq);
@@ -59,10 +58,11 @@ internal sealed class ItemService(
         try
         {
             await repository.AddAsync(item);
+            logger.LogInformation("Item {ItemId} with CustomId {CustomId} created in inventory {InventoryId}.", item.Id, item.CustomId, inventoryId);
         }
-        catch (DbUpdateException ex)
-            when (ex.InnerException?.Message.Contains("duplicate") == true)
+        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate") == true)
         {
+            logger.LogWarning(ex, "Duplicate custom ID '{CustomId}' encountered during item creation in inventory {InventoryId}.", item.CustomId, inventoryId);
             throw new DuplicateCustomIdExtention(item.CustomId);
         }
 
@@ -74,7 +74,10 @@ internal sealed class ItemService(
         var item = await GetOrThrowAsync(inventoryId, itemId);
 
         if (item.CreatedById != currentUserService.UserId && !currentUserService.IsAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to update item {ItemId} without permission.", currentUserService.UserId, itemId);
             throw new ForbiddenException("You don't have access to update.");
+        }
 
         item.FieldValues.Clear();
         foreach (var field in dto.FieldValues)
@@ -87,9 +90,11 @@ internal sealed class ItemService(
         try
         {
             await repository.UpdateAsync(item);
+            logger.LogInformation("Item {ItemId} in inventory {InventoryId} updated successfully.", itemId, inventoryId);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
+            logger.LogWarning(ex, "Concurrency conflict updating item {ItemId} in inventory {InventoryId}.", itemId, inventoryId);
             throw new OptimisticLockException();
         }
 
@@ -101,16 +106,23 @@ internal sealed class ItemService(
         var item = await GetOrThrowAsync(inventoryId, itemId);
 
         if (item.CreatedById != currentUserService.UserId && !currentUserService.IsAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to delete item {ItemId} without permission.", currentUserService.UserId, itemId);
             throw new ForbiddenException("You don't have access to delete.");
+        }
 
         await repository.DeleteAsync(inventoryId, itemId);
+        logger.LogInformation("Item {ItemId} in inventory {InventoryId} deleted successfully.", itemId, inventoryId);
     }
 
     private async Task<Item> GetOrThrowAsync(int inventoryId, int itemId)
     {
-        var item = await repository.GetByIdAsync(inventoryId, itemId)
-            ?? throw new NotFoundException($"Item {itemId} in inventory {inventoryId} not found.");
-
+        var item = await repository.GetByIdAsync(inventoryId, itemId);
+        if (item == null)
+        {
+            logger.LogWarning("Item {ItemId} in inventory {InventoryId} not found.", itemId, inventoryId);
+            throw new NotFoundException($"Item {itemId} in inventory {inventoryId} not found.");
+        }
         return item;
     }
 }

@@ -3,17 +3,23 @@ using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Extentions;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class LikeService(
     AppDbContext context,
-    ICurrentUserService currentUserService) : ILikeService
+    ICurrentUserService currentUserService,
+    ILogger<LikeService> logger) : ILikeService
 {
     public async Task<LikeDto> ToggleLikeAsync(int itemId)
     {
-        var item = await context.Items.FirstOrDefaultAsync(x => x.Id == itemId)
-            ?? throw new NotFoundException($"Item {itemId} not found.");
+        var item = await context.Items.FirstOrDefaultAsync(x => x.Id == itemId);
+        if (item == null)
+        {
+            logger.LogWarning("Attempted to toggle like for non-existent item {ItemId}.", itemId);
+            throw new NotFoundException($"Item {itemId} not found.");
+        }
 
         var userId = currentUserService.UserId;
 
@@ -23,10 +29,12 @@ internal sealed class LikeService(
         if (existingLike is not null)
         {
             context.Likes.Remove(existingLike);
+            logger.LogInformation("User {UserId} removed like from item {ItemId}.", userId, itemId);
         }
         else
         {
             context.Likes.Add(new() { ItemId = itemId, UserId = userId });
+            logger.LogInformation("User {UserId} added like to item {ItemId}.", userId, itemId);
         }
 
         await context.SaveChangesAsync();

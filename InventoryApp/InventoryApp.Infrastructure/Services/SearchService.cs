@@ -3,13 +3,18 @@ using InventoryApp.Application.Interfaces;
 using InventoryApp.Application.Mappers;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryApp.Infrastructure.Services;
 
-internal sealed class SearchService(AppDbContext context) : ISearchService
+internal sealed class SearchService(
+    AppDbContext context,
+    ILogger<SearchService> logger) : ISearchService
 {
     public async Task<SearchResultDto> SearchAsync(string query)
     {
+        logger.LogInformation("Global search performed with query: '{Query}'", query);
+
         var inventories = await context.Inventories
             .Where(i => i.IsPublic && (
                 i.Title.Contains(query) ||

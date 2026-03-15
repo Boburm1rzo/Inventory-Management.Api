@@ -6,15 +6,19 @@ using InventoryApp.Domain.Entities;
 using InventoryApp.Domain.Extentions;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class AdminService(
     AppDbContext context,
-    ICurrentUserService currentUserService) : IAdminService
+    ICurrentUserService currentUserService,
+    ILogger<AdminService> logger) : IAdminService
 {
     public async Task<PagedResult<AdminUserDto>> GetUsersAsync(int page, int size, string? search)
     {
+        logger.LogInformation("Admin requested user list. Page: {Page}, Size: {Size}, Search: {Search}", page, size, search);
+
         var query = context.Users
             .Where(x => search == null ||
                    x.DisplayName.Contains(search) ||
@@ -43,11 +47,14 @@ internal sealed class AdminService(
         var user = await GetOrThrowAsync(userId);
 
         if (user.Id == currentUserService.UserId)
+        {
+            logger.LogWarning("Admin {AdminId} attempted to block themselves.", currentUserService.UserId);
             throw new DomainException("Admin cannot block himself.");
+        }
 
         user.IsBlocked = true;
-
         await context.SaveChangesAsync();
+        logger.LogInformation("User {UserId} was blocked by Admin {AdminId}.", userId, currentUserService.UserId);
     }
 
     public async Task UnblockUserAsync(string userId)
@@ -55,8 +62,8 @@ internal sealed class AdminService(
         var user = await GetOrThrowAsync(userId);
 
         user.IsBlocked = false;
-
         await context.SaveChangesAsync();
+        logger.LogInformation("User {UserId} was unblocked by Admin {AdminId}.", userId, currentUserService.UserId);
     }
 
     public async Task DeleteUserAsync(string userId)
@@ -64,23 +71,22 @@ internal sealed class AdminService(
         var user = await GetOrThrowAsync(userId);
 
         if (user.Id == currentUserService.UserId)
+        {
+            logger.LogWarning("Admin {AdminId} attempted to delete themselves.", currentUserService.UserId);
             throw new DomainException("Admin cannot delete himself.");
+        }
 
         context.Users.Remove(user);
-
         await context.SaveChangesAsync();
+        logger.LogInformation("User {UserId} was deleted by Admin {AdminId}.", userId, currentUserService.UserId);
     }
 
     public async Task<AdminStatsDto> GetStatsAsync()
     {
-        var users = await context.Users
-            .Select(x => x.MapToDto())
-            .ToListAsync();
+        logger.LogInformation("Admin requested system statistics.");
 
-        var inventories = await context.Inventories
-            .Include(x => x.Items)
-            .ToListAsync();
-
+        var users = await context.Users.Select(x => x.MapToDto()).ToListAsync();
+        var inventories = await context.Inventories.Include(x => x.Items).ToListAsync();
         var totalItems = await context.Items.CountAsync();
 
         var topInventoriesByItems = inventories
@@ -89,22 +95,19 @@ internal sealed class AdminService(
             .Select(x => x.MapToListItemDto())
             .ToList();
 
-        var recentUsers = users
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(5)
-            .ToList();
+        var recentUsers = users.OrderByDescending(x => x.CreatedAt).Take(5).ToList();
 
-        var totalUsers = users.Count;
-        var totalInventories = inventories.Count;
-
-        return new(totalUsers, totalInventories, totalItems, topInventoriesByItems, recentUsers);
+        return new(users.Count, inventories.Count, totalItems, topInventoriesByItems, recentUsers);
     }
 
     private async Task<User> GetOrThrowAsync(string userId)
     {
-        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId)
-            ?? throw new NotFoundException($"User {userId} not found.");
-
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        if (user == null)
+        {
+            logger.LogWarning("User with ID {UserId} was not found.", userId);
+            throw new NotFoundException($"User {userId} not found.");
+        }
         return user;
     }
 }

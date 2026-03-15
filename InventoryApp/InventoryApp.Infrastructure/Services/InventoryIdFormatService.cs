@@ -4,13 +4,15 @@ using InventoryApp.Application.Mappers;
 using InventoryApp.Infrastructure.Helpers;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryApp.Infrastructure.Services;
 
 internal sealed class InventoryIdFormatService(
     AppDbContext context,
     AccessChecker accessChecker,
-    ICustomIdGenerator customIdGenerator) : IInventoryIdFormatService
+    ICustomIdGenerator customIdGenerator,
+    ILogger<InventoryIdFormatService> logger) : IInventoryIdFormatService
 {
     public async Task<List<InventoryIdFormatPartDto>> GetPartsAsync(int inventoryId)
     {
@@ -19,11 +21,7 @@ internal sealed class InventoryIdFormatService(
             .OrderBy(x => x.Order)
             .ToListAsync();
 
-        var dtos = parts
-            .Select(x => x.MapToDto())
-            .ToList();
-
-        return dtos;
+        return parts.Select(x => x.MapToDto()).ToList();
     }
 
     public async Task<InventoryIdFormatPartDto> AddPartAsync(int inventoryId, CreateIdFormatPartDto dto)
@@ -39,6 +37,7 @@ internal sealed class InventoryIdFormatService(
         context.InventoryIdFormatParts.Add(newIdFormat);
         await context.SaveChangesAsync();
 
+        logger.LogInformation("Added new ID format part {PartType} to inventory {InventoryId}.", dto.Type, inventoryId);
         return newIdFormat.MapToDto();
     }
 
@@ -49,6 +48,8 @@ internal sealed class InventoryIdFormatService(
         await context.InventoryIdFormatParts
             .Where(x => x.InventoryId == inventoryId && x.Id == partId)
             .ExecuteDeleteAsync();
+
+        logger.LogInformation("Deleted ID format part {PartId} from inventory {InventoryId}.", partId, inventoryId);
     }
 
     public async Task ReorderPartsAsync(int inventoryId, ReorderIdFormatPartsDto dto)
@@ -67,6 +68,7 @@ internal sealed class InventoryIdFormatService(
         }
 
         await context.SaveChangesAsync();
+        logger.LogInformation("Reordered ID format parts for inventory {InventoryId}.", inventoryId);
     }
 
     public async Task<string> PreviewIdAsync(int inventoryId)
@@ -80,6 +82,7 @@ internal sealed class InventoryIdFormatService(
             .CountAsync() + 1;
 
         var preview = customIdGenerator.Generate(parts, nextSequence);
+        logger.LogInformation("Generated preview ID '{PreviewId}' for inventory {InventoryId}.", preview, inventoryId);
 
         return preview;
     }

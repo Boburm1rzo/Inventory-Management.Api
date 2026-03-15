@@ -1,11 +1,12 @@
 ﻿using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Entities;
 using InventoryApp.Domain.Enums;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace InventoryApp.Infrastructure.Services;
 
-internal sealed class CustomIdGenerator : ICustomIdGenerator
+internal sealed class CustomIdGenerator(ILogger<CustomIdGenerator> logger) : ICustomIdGenerator
 {
     public string Generate(List<InventoryIdFormatPart> parts, int nextSequence)
     {
@@ -25,6 +26,8 @@ internal sealed class CustomIdGenerator : ICustomIdGenerator
             });
         }
 
-        return sb.ToString();
+        var generatedId = sb.ToString();
+        logger.LogInformation("Generated custom ID: {GeneratedId} for sequence {NextSequence}.", generatedId, nextSequence);
+        return generatedId;
     }
 }
