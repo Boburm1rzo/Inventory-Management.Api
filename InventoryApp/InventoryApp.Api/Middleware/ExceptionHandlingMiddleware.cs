@@ -55,6 +55,7 @@ public class ExceptionHandlingMiddleware
         {
             StatusCode = context.Response.StatusCode,
             Message = ex.Message,
+            Trace = ex.StackTrace,
             TraceId = traceId
         };
 
