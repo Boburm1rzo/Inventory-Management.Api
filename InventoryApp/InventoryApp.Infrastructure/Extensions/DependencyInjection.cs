@@ -11,25 +11,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace InventoryApp.Infrastructure.Extentions;
+namespace InventoryApp.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        services.AddDatabase(configuration);
+        services.AddConfigurations(configuration);
+        services.AddIdentity();
+        services.AddServices();
 
-        services
-            .AddOptions<JwtSettings>()
-            .Bind(configuration.GetSection(JwtSettings.SectionName))
-            .ValidateOnStart();
+        return services;
+    }
 
-        services
-            .AddOptions<ImageKitSettings>()
-            .Bind(configuration.GetSection(ImageKitSettings.SectionName))
-            .ValidateOnStart();
-
+    private static IServiceCollection AddIdentity(this IServiceCollection services)
+    {
         services.AddIdentity<User, IdentityRole>(options =>
         {
             options.User.RequireUniqueEmail = true;
@@ -41,6 +38,34 @@ public static class DependencyInjection
         .AddSignInManager()
         .AddDefaultTokenProviders();
 
+        return services;
+    }
+
+    private static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection(JwtSettings.SectionName))
+            .ValidateOnStart();
+
+        services
+            .AddOptions<ImageKitSettings>()
+            .Bind(configuration.GetSection(ImageKitSettings.SectionName))
+            .ValidateOnStart();
+
+        return services;
+    }
+
+    private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+        return services;
+    }
+
+    private static IServiceCollection AddServices(this IServiceCollection services)
+    {
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
