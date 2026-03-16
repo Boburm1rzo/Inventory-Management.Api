@@ -1,4 +1,4 @@
-﻿namespace InventoryApp.Domain.Extentions;
+﻿namespace InventoryApp.Domain.Exceptions;
 
 public class NotFoundException : DomainException
 {
