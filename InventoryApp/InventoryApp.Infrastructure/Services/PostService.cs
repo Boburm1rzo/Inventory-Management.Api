@@ -37,6 +37,10 @@ internal sealed class PostService(
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
+        await context.Entry(post)
+            .Reference(p => p.Author)
+            .LoadAsync();
+
         logger.LogInformation("User {UserId} created post {PostId} in inventory {InventoryId}.", currentUserService.UserId, post.Id, inventoryId);
 
         var postDto = post.MapToDto();
