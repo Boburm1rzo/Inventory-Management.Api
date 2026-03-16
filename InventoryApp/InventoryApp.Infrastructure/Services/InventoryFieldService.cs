@@ -1,7 +1,7 @@
 ﻿using InventoryApp.Application.DTOs.Field;
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Application.Mappers;
-using InventoryApp.Domain.Extentions;
+using InventoryApp.Domain.Exceptions;
 using InventoryApp.Infrastructure.Helpers;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;

@@ -3,7 +3,7 @@ using InventoryApp.Application.Interfaces;
 using InventoryApp.Application.Mappers;
 using InventoryApp.Domain.Common;
 using InventoryApp.Domain.Entities;
-using InventoryApp.Domain.Extentions;
+using InventoryApp.Domain.Exceptions;
 using InventoryApp.Domain.Interfaces;
 using InventoryApp.Infrastructure.Helpers;
 using InventoryApp.Infrastructure.Persistance;
@@ -63,7 +63,7 @@ internal sealed class ItemService(
         catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate") == true)
         {
             logger.LogWarning(ex, "Duplicate custom ID '{CustomId}' encountered during item creation in inventory {InventoryId}.", item.CustomId, inventoryId);
-            throw new DuplicateCustomIdExtention(item.CustomId);
+            throw new DuplicateCustomIdException(item.CustomId);
         }
 
         return item.MapToDto();

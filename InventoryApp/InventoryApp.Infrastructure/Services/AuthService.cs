@@ -1,7 +1,7 @@
 ﻿using InventoryApp.Application.DTOs.Auth;
 using InventoryApp.Application.Interfaces;
 using InventoryApp.Domain.Entities;
-using InventoryApp.Domain.Extentions;
+using InventoryApp.Domain.Exceptions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

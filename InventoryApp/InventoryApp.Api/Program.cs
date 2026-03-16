@@ -1,7 +1,7 @@
-using InventoryApp.Api.Extention;
+using InventoryApp.Api.Extension;
 using InventoryApp.Api.Hubs;
 using InventoryApp.Api.Middleware;
-using InventoryApp.Infrastructure.Extentions;
+using InventoryApp.Infrastructure.Extensions;
 using InventoryApp.Infrastructure.Seeders;
 using Serilog;
 using Serilog.Events;

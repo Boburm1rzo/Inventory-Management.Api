@@ -3,7 +3,7 @@ using InventoryApp.Application.Interfaces;
 using InventoryApp.Application.Mappers;
 using InventoryApp.Domain.Common;
 using InventoryApp.Domain.Entities;
-using InventoryApp.Domain.Extentions;
+using InventoryApp.Domain.Exceptions;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

@@ -1,6 +1,6 @@
 ﻿using InventoryApp.Application.DTOs.Like;
 using InventoryApp.Application.Interfaces;
-using InventoryApp.Domain.Extentions;
+using InventoryApp.Domain.Exceptions;
 using InventoryApp.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
