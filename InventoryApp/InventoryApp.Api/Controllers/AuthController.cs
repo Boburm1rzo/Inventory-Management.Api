@@ -3,6 +3,7 @@ using InventoryApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InventoryApp.Api.Controllers;
 
@@ -23,6 +24,7 @@ public class AuthController(
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginDto request)
     {
         logger.LogInformation("HTTP Login request. Email={Email}", request.Email);
