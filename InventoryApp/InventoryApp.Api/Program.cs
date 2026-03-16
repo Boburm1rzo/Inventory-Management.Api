@@ -43,6 +43,7 @@ try
     });
 
     app.UseHttpsRedirection();
+    app.UseForwardedHeaders();
     app.UseRouting();
     app.UseCors("Frontend");
     app.UseCookiePolicy();

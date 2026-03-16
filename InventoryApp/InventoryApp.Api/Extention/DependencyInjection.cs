@@ -2,6 +2,8 @@
 using InventoryApp.Application.Configurations;
 using InventoryApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -14,6 +16,13 @@ public static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
+
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
 
         services
             .AddOptions<AuthenticationSettings>()
@@ -113,6 +122,11 @@ public static class DependencyInjection
 
         services.AddSignalR();
         services.AddScoped<IDiscussionHubService, DiscussionHubService>();
+
+        services.Configure<FormOptions>(options =>
+        {
+            options.MultipartBodyLengthLimit = 5 * 1024 * 1024;
+        });
 
         return services;
     }
