@@ -25,6 +25,11 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(JwtSettings.SectionName))
             .ValidateOnStart();
 
+        services
+            .AddOptions<ImageKitSettings>()
+            .Bind(configuration.GetSection(ImageKitSettings.SectionName))
+            .ValidateOnStart();
+
         services.AddIdentity<User, IdentityRole>(options =>
         {
             options.User.RequireUniqueEmail = true;
@@ -56,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IPersonalService, PersonalService>();
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IImageService, ImageService>();
 
         return services;
     }
