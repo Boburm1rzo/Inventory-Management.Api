@@ -6,7 +6,7 @@ namespace InventoryApp.Domain.Interfaces;
 public interface IInventoryRepository
 {
     Task<Inventory?> GetByIdAsync(int id);
-    Task<PagedResult<Inventory>> GetPagedAsync(int page, int size);
+    Task<PagedResult<Inventory>> GetPagedAsync(int page, int size, string? userId, bool isAdmin);
     Task AddAsync(Inventory inventory);
     Task UpdateAsync(Inventory inventory);
     Task DeleteAsync(int id);

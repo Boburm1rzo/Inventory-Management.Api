@@ -19,7 +19,10 @@ internal sealed class InventoryService(
 {
     public async Task<PagedResult<InventoryListItemDto>> GetPagedAsync(int page, int size)
     {
-        var result = await repository.GetPagedAsync(page, size);
+        var userId = currentUserService.UserId;
+        var isAdmin = currentUserService.IsAdmin;
+
+        var result = await repository.GetPagedAsync(page, size, userId, isAdmin);
 
         return new PagedResult<InventoryListItemDto>
         {
@@ -33,6 +36,18 @@ internal sealed class InventoryService(
     public async Task<InventoryDto> GetByIdAsync(int id)
     {
         var inventory = await GetOrThrowAsync(id);
+
+        if (!inventory.IsPublic)
+        {
+            var userId = currentUserService.UserId;
+            var hasAccess = currentUserService.IsAdmin
+                || inventory.OwnerId == userId
+                || inventory.AccessList.Any(x => x.UserId == userId);
+
+            if (!hasAccess)
+                throw new ForbiddenException("This inventory is private.");
+        }
+
         return inventory.MapToDto();
     }
 

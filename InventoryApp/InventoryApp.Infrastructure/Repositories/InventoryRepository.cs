@@ -8,11 +8,18 @@ namespace InventoryApp.Infrastructure.Repositories;
 
 internal sealed class InventoryRepository(AppDbContext context) : IInventoryRepository
 {
-    public async Task<PagedResult<Inventory>> GetPagedAsync(int page, int size)
+    public async Task<PagedResult<Inventory>> GetPagedAsync(int page, int size, string? userId, bool isAdmin)
     {
         var query = context.Inventories
             .Include(x => x.Owner)
             .Include(x => x.Category)
+            .Include(x => x.InventoryTags)
+                .ThenInclude(x => x.Tag)
+            .Where(x =>
+                isAdmin ||
+                x.OwnerId == userId ||
+                x.IsPublic ||
+                x.AccessList.Any(a => a.UserId == userId))
             .AsNoTracking();
 
         var total = await query.CountAsync();
@@ -39,6 +46,7 @@ internal sealed class InventoryRepository(AppDbContext context) : IInventoryRepo
             .Include(x => x.Fields)
             .Include(x => x.InventoryTags)
                 .ThenInclude(t => t.Tag)
+            .Include(x => x.AccessList)
             .FirstOrDefaultAsync(x => x.Id == id);
 
     public async Task AddAsync(Inventory inventory)
