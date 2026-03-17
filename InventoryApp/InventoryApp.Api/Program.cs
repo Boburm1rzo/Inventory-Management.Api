@@ -35,8 +35,6 @@ try
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "InventoryApp API V1");
     });
 
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
-
     app.UseSerilogRequestLogging(options =>
     {
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} => {StatusCode} in {Elapsed:0.0000} ms";
@@ -49,6 +47,8 @@ try
     app.UseCookiePolicy();
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseMiddleware<BlockedUserMiddleware>();
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     app.MapHub<DiscussionHub>("/hubs/discussion");
     app.MapControllers();
