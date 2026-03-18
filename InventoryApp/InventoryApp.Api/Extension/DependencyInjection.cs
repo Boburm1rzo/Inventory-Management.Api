@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InventoryApp.Api.Extension;
 
@@ -18,7 +20,14 @@ public static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddConfigurations(configuration);
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters
+                    .Add(new JsonStringEnumConverter());
+                options.JsonSerializerOptions.PropertyNamingPolicy
+                    = JsonNamingPolicy.CamelCase;
+            });
         services.AddForwardedHeaders();
         services.AddAuthentication(configuration);
         services.AddSwagger();

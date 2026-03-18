@@ -41,6 +41,7 @@ internal sealed class InventoryFieldService(
 
         var inventoryField = dto.MapToEntity();
         inventoryField.Order = allFields.Count;
+        inventoryField.InventoryId = inventoryId;
 
         context.InventoryFields.Add(inventoryField);
         await context.SaveChangesAsync();

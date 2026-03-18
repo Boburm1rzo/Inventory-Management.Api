@@ -34,7 +34,7 @@ public class ItemsController(IItemService service) : ControllerBase
     {
         var result = await service.CreateAsync(inventoryId, dto);
 
-        return CreatedAtAction(nameof(GetById), new { inventoryId, id = result.Id }, result);
+        return Ok(result);
     }
 
     [HttpPut("{itemId:int}")]

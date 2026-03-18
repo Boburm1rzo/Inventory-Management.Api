@@ -16,8 +16,11 @@ public class InventoryIdFormatController(IInventoryIdFormatService service) : Co
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> AddPart(int inventoryId, CreateIdFormatPartDto dto)
-        => Ok(await service.AddPartAsync(inventoryId, dto));
+    {
+        var result = await service.AddPartAsync(inventoryId, dto);
 
+        return Ok(result);
+    }
     [HttpDelete("{partId:int}")]
     [Authorize]
     public async Task<IActionResult> DeletePart(int inventoryId, int partId)

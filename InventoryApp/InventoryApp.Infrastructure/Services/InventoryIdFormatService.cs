@@ -32,6 +32,7 @@ internal sealed class InventoryIdFormatService(
             .CountAsync(x => x.InventoryId == inventoryId);
 
         var newIdFormat = dto.MapToEntity();
+        newIdFormat.InventoryId = inventoryId;
         newIdFormat.Order = order;
 
         context.InventoryIdFormatParts.Add(newIdFormat);

@@ -1,5 +1,8 @@
-﻿namespace InventoryApp.Domain.Enums;
+﻿using System.Text.Json.Serialization;
 
+namespace InventoryApp.Domain.Enums;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum FieldType
 {
     SingleLineText = 1,
